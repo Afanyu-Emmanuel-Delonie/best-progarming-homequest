@@ -1,1 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  font-family: 'Rubik', sans-serif;
+  color: var(--color-text);
+  background-color: var(--color-bg-muted);
+  margin: 0;
+}
+
+.sidebar-link:hover {
+  background-color: #ffffff12 !important;
+  color: #fff !important;
+}
+
+@theme {
+  /* Primary - Burnt Orange #FF4F00 */
+  --color-primary:         #FF4F00;
+  --color-primary-light:   #FF7433;
+  --color-primary-lighter: #FF9966;
+  --color-primary-dark:    #CC3F00;
+  --color-primary-darker:  #992F00;
+
+  /* Neutrals */
+  --color-bg:              #FFFFFF;
+  --color-bg-subtle:       #FFF5F0;
+  --color-bg-muted:        #F5F5F5;
+  --color-surface:         #FFFFFF;
+  --color-border:          #E5E5E5;
+  --color-border-strong:   #CCCCCC;
+
+  /* Text */
+  --color-text:            #1A1A1A;
+  --color-text-muted:      #6B6B6B;
+  --color-text-subtle:     #9E9E9E;
+  --color-text-inverse:    #FFFFFF;
+
+  /* Sidebar */
+  --color-sidebar-bg:      #1A1A1A;
+  --color-sidebar-text:    #B3B3B3;
+
+  /* Semantic */
+  --color-success:         #22C55E;
+  --color-warning:         #F59E0B;
+  --color-error:           #EF4444;
+  --color-info:            #3B82F6;
+}
