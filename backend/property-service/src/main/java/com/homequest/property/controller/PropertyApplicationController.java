@@ -1,0 +1,83 @@
+package com.homequest.property.controller;
+
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.homequest.property.dto.PropertyApplicationRequest;
+import com.homequest.property.dto.PropertyApplicationResponse;
+import com.homequest.property.service.PropertyApplicationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequestMapping("/applications")
+@RequiredArgsConstructor
+@Tag(name = "Property Applications", description = "Bid/offer lifecycle — submit, accept, reject, withdraw")
+public class PropertyApplicationController {
+
+    private final PropertyApplicationService applicationService;
+
+    @PostMapping
+    @PreAuthorize("hasAnyRole('ROLE_CLIENT', 'ROLE_OWNER')")
+    @Operation(summary = "Submit a bid", description = "Buyer submits an offer on a property. Notifies the listing agent in real-time.")
+    public ResponseEntity<PropertyApplicationResponse> submit(
+            @Valid @RequestBody PropertyApplicationRequest request, Authentication auth) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(applicationService.submit(request, (String) auth.getPrincipal()));
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get application by ID")
+    public ResponseEntity<PropertyApplicationResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(applicationService.getById(id));
+    }
+
+    @GetMapping("/my")
+    @PreAuthorize("hasAnyRole('ROLE_CLIENT', 'ROLE_OWNER')")
+    @Operation(summary = "Get my submitted bids")
+    public ResponseEntity<List<PropertyApplicationResponse>> getMyApplications(Authentication auth) {
+        return ResponseEntity.ok(applicationService.getMyApplications((String) auth.getPrincipal()));
+    }
+
+    @GetMapping("/property/{propertyId}")
+    @PreAuthorize("hasAnyRole('ROLE_AGENT', 'ROLE_COMPANY_ADMIN', 'ROLE_MANAGER')")
+    @Operation(summary = "Get all bids on a property")
+    public ResponseEntity<List<PropertyApplicationResponse>> getByProperty(@PathVariable Long propertyId) {
+        return ResponseEntity.ok(applicationService.getByProperty(propertyId));
+    }
+
+    @PatchMapping("/{id}/accept")
+    @PreAuthorize("hasAnyRole('ROLE_AGENT', 'ROLE_OWNER', 'ROLE_COMPANY_ADMIN', 'ROLE_MANAGER')")
+    @Operation(summary = "Accept a bid", description = "Notifies the buyer in real-time")
+    public ResponseEntity<PropertyApplicationResponse> accept(@PathVariable Long id, Authentication auth) {
+        return ResponseEntity.ok(applicationService.accept(id, (String) auth.getPrincipal()));
+    }
+
+    @PatchMapping("/{id}/reject")
+    @PreAuthorize("hasAnyRole('ROLE_AGENT', 'ROLE_OWNER', 'ROLE_COMPANY_ADMIN', 'ROLE_MANAGER')")
+    @Operation(summary = "Reject a bid", description = "Notifies the buyer in real-time")
+    public ResponseEntity<PropertyApplicationResponse> reject(@PathVariable Long id, Authentication auth) {
+        return ResponseEntity.ok(applicationService.reject(id, (String) auth.getPrincipal()));
+    }
+
+    @PatchMapping("/{id}/withdraw")
+    @PreAuthorize("hasAnyRole('ROLE_CLIENT', 'ROLE_OWNER')")
+    @Operation(summary = "Withdraw my bid")
+    public ResponseEntity<PropertyApplicationResponse> withdraw(@PathVariable Long id, Authentication auth) {
+        return ResponseEntity.ok(applicationService.withdraw(id, (String) auth.getPrincipal()));
+    }
+}
