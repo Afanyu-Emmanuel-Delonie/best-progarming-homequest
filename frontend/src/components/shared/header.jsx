@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from "react"
 import { useLocation } from "react-router-dom"
-import { Menu, Bell, ChevronDown, LogOut, User, Settings, Check } from "lucide-react"
+import { Menu, Bell, ChevronDown, LogOut, User, Settings, Check, Home } from "lucide-react"
 import { PAGE_TITLES } from "../../constants/nav"
 
-export default function Header({ fullName, role, onToggleSidebar }) {
+export default function Header({ fullName, role, onToggleSidebar, profileHref = "/admin/profile", settingsHref = "/admin/settings" }) {
   const { pathname } = useLocation()
   const title = PAGE_TITLES[pathname] ?? "Dashboard"
 
@@ -53,9 +53,12 @@ export default function Header({ fullName, role, onToggleSidebar }) {
         <button onClick={onToggleSidebar} style={iconBtnStyle} aria-label="Toggle sidebar">
           <Menu size={20} />
         </button>
-        <span style={{ fontWeight: 700, fontSize: "1rem", color: "var(--color-text)" }}>
-          {title}
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <div style={{ width: 28, height: 28, borderRadius: "7px", backgroundColor: "var(--color-primary)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Home size={14} color="#fff" />
+          </div>
+          <span style={{ fontWeight: 700, fontSize: "0.9375rem", color: "var(--color-text)" }}>{title}</span>
+        </div>
       </div>
 
       {/* RIGHT */}
@@ -128,17 +131,17 @@ export default function Header({ fullName, role, onToggleSidebar }) {
             }}>
               {initials}
             </div>
-            <div style={{ textAlign: "left", lineHeight: 1.25 }}>
+            <div className="header-profile-text" style={{ textAlign: "left", lineHeight: 1.25 }}>
               <p style={{ margin: 0, fontSize: "0.8125rem", fontWeight: 600, color: "var(--color-text)", whiteSpace: "nowrap" }}>{fullName}</p>
               <p style={{ margin: 0, fontSize: "0.6875rem", color: "var(--color-text-muted)", textTransform: "capitalize" }}>{role?.replace("_", " ").toLowerCase()}</p>
             </div>
-            <ChevronDown size={14} style={{ color: "var(--color-text-muted)", transform: profileOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+            <ChevronDown className="header-profile-text" size={14} style={{ color: "var(--color-text-muted)", transform: profileOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
           </button>
 
           {profileOpen && (
             <div style={dropdownStyle({ minWidth: "180px" })}>
-              <a href="/admin/profile" style={menuItemStyle}><User size={14} /> My Profile</a>
-              <a href="/admin/settings" style={menuItemStyle}><Settings size={14} /> Settings</a>
+              <a href={profileHref}  style={menuItemStyle}><User size={14} /> My Profile</a>
+              <a href={settingsHref} style={menuItemStyle}><Settings size={14} /> Settings</a>
               <div style={{ height: "1px", background: "var(--color-border)", margin: "0.25rem 0" }} />
               <button onClick={() => {/* dispatch logout */}} style={{ ...menuItemStyle, width: "100%", border: "none", cursor: "pointer", color: "var(--color-error)" }}>
                 <LogOut size={14} /> Sign out

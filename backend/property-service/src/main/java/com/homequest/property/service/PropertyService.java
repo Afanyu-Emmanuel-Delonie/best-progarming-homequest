@@ -3,9 +3,13 @@ package com.homequest.property.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.homequest.property.dto.PageResponse;
 import com.homequest.property.dto.PropertyRequest;
 import com.homequest.property.dto.PropertyResponse;
 import com.homequest.property.model.Property;
@@ -47,38 +51,45 @@ public class PropertyService {
     }
 
     @Transactional(readOnly = true)
-    public List<PropertyResponse> getAll() {
-        return propertyRepository.findAll().stream().map(this::toResponse).collect(Collectors.toList());
+    public PageResponse<PropertyResponse> getAll(int page, int size, String sortBy) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, sortBy));
+        var p = propertyRepository.findAll(pageable);
+        return PageResponse.<PropertyResponse>builder()
+                .content(p.getContent().stream().map(this::toResponse).collect(Collectors.toList()))
+                .page(p.getNumber()).size(p.getSize())
+                .totalElements(p.getTotalElements()).totalPages(p.getTotalPages())
+                .build();
     }
 
     @Transactional(readOnly = true)
-    public List<PropertyResponse> getByListingAgent(String agentPublicId) {
-        return propertyRepository.findByListingAgentPublicId(agentPublicId)
-                .stream().map(this::toResponse).collect(Collectors.toList());
+    public PageResponse<PropertyResponse> getByListingAgent(String agentPublicId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        var p = propertyRepository.findByListingAgentPublicId(agentPublicId, pageable);
+        return toPage(p);
     }
 
     @Transactional(readOnly = true)
-    public List<PropertyResponse> getBySellingAgent(String agentPublicId) {
-        return propertyRepository.findBySellingAgentPublicId(agentPublicId)
-                .stream().map(this::toResponse).collect(Collectors.toList());
+    public PageResponse<PropertyResponse> getBySellingAgent(String agentPublicId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return toPage(propertyRepository.findBySellingAgentPublicId(agentPublicId, pageable));
     }
 
     @Transactional(readOnly = true)
-    public List<PropertyResponse> getByOwner(String ownerPublicId) {
-        return propertyRepository.findByOwnerPublicId(ownerPublicId)
-                .stream().map(this::toResponse).collect(Collectors.toList());
+    public PageResponse<PropertyResponse> getByOwner(String ownerPublicId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return toPage(propertyRepository.findByOwnerPublicId(ownerPublicId, pageable));
     }
 
     @Transactional(readOnly = true)
-    public List<PropertyResponse> getByBuyer(String buyerPublicId) {
-        return propertyRepository.findByBuyerPublicId(buyerPublicId)
-                .stream().map(this::toResponse).collect(Collectors.toList());
+    public PageResponse<PropertyResponse> getByBuyer(String buyerPublicId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return toPage(propertyRepository.findByBuyerPublicId(buyerPublicId, pageable));
     }
 
     @Transactional(readOnly = true)
-    public List<PropertyResponse> getByCompany(Long companyId) {
-        return propertyRepository.findByCompanyId(companyId)
-                .stream().map(this::toResponse).collect(Collectors.toList());
+    public PageResponse<PropertyResponse> getByCompany(Long companyId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return toPage(propertyRepository.findByCompanyId(companyId, pageable));
     }
 
     @Transactional
@@ -126,6 +137,14 @@ public class PropertyService {
     private Property findOrThrow(Long id) {
         return propertyRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Property not found"));
+    }
+
+    private PageResponse<PropertyResponse> toPage(org.springframework.data.domain.Page<Property> p) {
+        return PageResponse.<PropertyResponse>builder()
+                .content(p.getContent().stream().map(this::toResponse).collect(Collectors.toList()))
+                .page(p.getNumber()).size(p.getSize())
+                .totalElements(p.getTotalElements()).totalPages(p.getTotalPages())
+                .build();
     }
 
     private PropertyResponse toResponse(Property p) {

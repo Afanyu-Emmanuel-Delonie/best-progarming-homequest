@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.homequest.property.dto.PageResponse;
 import com.homequest.property.dto.PropertyRequest;
 import com.homequest.property.dto.PropertyResponse;
 import com.homequest.property.model.PropertyStatus;
@@ -49,44 +50,62 @@ public class PropertyController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all properties", description = "Public endpoint — no token required")
-    public ResponseEntity<List<PropertyResponse>> getAll() {
-        return ResponseEntity.ok(propertyService.getAll());
+    @Operation(summary = "Get all properties (paginated)", description = "page, size, sortBy (default: createdAt). Public endpoint.")
+    public ResponseEntity<PageResponse<PropertyResponse>> getAll(
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy) {
+        return ResponseEntity.ok(propertyService.getAll(page, size, sortBy));
     }
 
     @GetMapping("/my/listings")
     @PreAuthorize("hasRole('ROLE_AGENT')")
-    @Operation(summary = "Get my listed properties", description = "Returns properties the authenticated agent registered")
-    public ResponseEntity<List<PropertyResponse>> getMyListings(Authentication auth) {
-        return ResponseEntity.ok(propertyService.getByListingAgent((String) auth.getPrincipal()));
+    @Operation(summary = "Get my listed properties (paginated)")
+    public ResponseEntity<PageResponse<PropertyResponse>> getMyListings(
+            Authentication auth,
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(propertyService.getByListingAgent((String) auth.getPrincipal(), page, size));
     }
 
     @GetMapping("/my/sales")
     @PreAuthorize("hasRole('ROLE_AGENT')")
-    @Operation(summary = "Get properties I am selling")
-    public ResponseEntity<List<PropertyResponse>> getMySales(Authentication auth) {
-        return ResponseEntity.ok(propertyService.getBySellingAgent((String) auth.getPrincipal()));
+    @Operation(summary = "Get properties I am selling (paginated)")
+    public ResponseEntity<PageResponse<PropertyResponse>> getMySales(
+            Authentication auth,
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(propertyService.getBySellingAgent((String) auth.getPrincipal(), page, size));
     }
 
     @GetMapping("/my/owned")
     @PreAuthorize("hasRole('ROLE_OWNER')")
-    @Operation(summary = "Get my owned properties")
-    public ResponseEntity<List<PropertyResponse>> getMyOwnedProperties(Authentication auth) {
-        return ResponseEntity.ok(propertyService.getByOwner((String) auth.getPrincipal()));
+    @Operation(summary = "Get my owned properties (paginated)")
+    public ResponseEntity<PageResponse<PropertyResponse>> getMyOwnedProperties(
+            Authentication auth,
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(propertyService.getByOwner((String) auth.getPrincipal(), page, size));
     }
 
     @GetMapping("/my/buying")
     @PreAuthorize("hasAnyRole('ROLE_CLIENT', 'ROLE_OWNER')")
-    @Operation(summary = "Get properties I am purchasing")
-    public ResponseEntity<List<PropertyResponse>> getMyPurchases(Authentication auth) {
-        return ResponseEntity.ok(propertyService.getByBuyer((String) auth.getPrincipal()));
+    @Operation(summary = "Get properties I am purchasing (paginated)")
+    public ResponseEntity<PageResponse<PropertyResponse>> getMyPurchases(
+            Authentication auth,
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(propertyService.getByBuyer((String) auth.getPrincipal(), page, size));
     }
 
     @GetMapping("/company/{companyId}")
     @PreAuthorize("hasAnyRole('ROLE_COMPANY_ADMIN', 'ROLE_MANAGER')")
-    @Operation(summary = "Get all properties for a company")
-    public ResponseEntity<List<PropertyResponse>> getByCompany(@PathVariable Long companyId) {
-        return ResponseEntity.ok(propertyService.getByCompany(companyId));
+    @Operation(summary = "Get all properties for a company (paginated)")
+    public ResponseEntity<PageResponse<PropertyResponse>> getByCompany(
+            @PathVariable Long companyId,
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(propertyService.getByCompany(companyId, page, size));
     }
 
     @PutMapping("/{id}")

@@ -4,10 +4,15 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.homequest.property.dto.PageResponse;
 import com.homequest.property.dto.PropertyApplicationRequest;
 import com.homequest.property.dto.PropertyApplicationResponse;
 import com.homequest.property.model.ApplicationStatus;
@@ -48,7 +53,6 @@ public class PropertyApplicationService {
 
         PropertyApplicationResponse response = toResponse(applicationRepository.save(application));
 
-        // notify the listing agent a new bid has arrived
         propertyRepository.findById(request.getPropertyId()).ifPresent(property ->
                 notificationService.notifyUser(property.getListingAgentPublicId(),
                         NotificationEvent.builder()
@@ -67,15 +71,21 @@ public class PropertyApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public List<PropertyApplicationResponse> getByProperty(Long propertyId) {
-        return applicationRepository.findByPropertyId(propertyId)
-                .stream().map(this::toResponse).collect(Collectors.toList());
+    public PageResponse<PropertyApplicationResponse> getAll(int page, int size, String sortBy) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, sortBy));
+        return toPage(applicationRepository.findAll(pageable));
     }
 
     @Transactional(readOnly = true)
-    public List<PropertyApplicationResponse> getMyApplications(String buyerPublicId) {
-        return applicationRepository.findByBuyerPublicId(buyerPublicId)
-                .stream().map(this::toResponse).collect(Collectors.toList());
+    public PageResponse<PropertyApplicationResponse> getByProperty(Long propertyId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return toPage(applicationRepository.findByPropertyId(propertyId, pageable));
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<PropertyApplicationResponse> getMyApplications(String buyerPublicId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return toPage(applicationRepository.findByBuyerPublicId(buyerPublicId, pageable));
     }
 
     @Transactional
@@ -122,7 +132,6 @@ public class PropertyApplicationService {
         return toResponse(applicationRepository.save(application));
     }
 
-    // runs every day at midnight to expire overdue pending applications
     @Scheduled(cron = "0 0 0 * * *")
     @Transactional
     public void expireApplications() {
@@ -135,6 +144,16 @@ public class PropertyApplicationService {
     private PropertyApplication findOrThrow(Long id) {
         return applicationRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Application not found"));
+    }
+
+    private PageResponse<PropertyApplicationResponse> toPage(Page<PropertyApplication> page) {
+        return PageResponse.<PropertyApplicationResponse>builder()
+                .content(page.getContent().stream().map(this::toResponse).collect(Collectors.toList()))
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .build();
     }
 
     private PropertyApplicationResponse toResponse(PropertyApplication a) {

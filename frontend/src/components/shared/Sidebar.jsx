@@ -2,7 +2,8 @@ import { NavLink } from "react-router-dom"
 import { Home, LogOut } from "lucide-react"
 import { ADMIN_NAV } from "../../constants/nav"
 
-export default function Sidebar({ collapsed, onToggle }) {
+export default function Sidebar({ collapsed, nav }) {
+  const navItems = nav ?? ADMIN_NAV
   const w = collapsed ? "64px" : "240px"
 
   return (
@@ -49,11 +50,11 @@ export default function Sidebar({ collapsed, onToggle }) {
 
       {/* Nav */}
       <nav style={{ flex: 1, padding: "0.75rem 0.5rem", display: "flex", flexDirection: "column", gap: "2px" }}>
-        {ADMIN_NAV.map((item) => (
+        {navItems.map((item) => (
           <NavLink
             key={item.href}
             to={item.href}
-            end={item.href === "/admin"}
+            end={item.end ?? false}
             title={collapsed ? item.label : undefined}
             style={({ isActive }) => ({
               display: "flex",

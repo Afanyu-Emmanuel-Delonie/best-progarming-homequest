@@ -1,7 +1,5 @@
 package com.homequest.property.controller;
 
-import java.util.List;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -12,8 +10,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.homequest.property.dto.PageResponse;
 import com.homequest.property.dto.PropertyApplicationRequest;
 import com.homequest.property.dto.PropertyApplicationResponse;
 import com.homequest.property.service.PropertyApplicationService;
@@ -32,7 +32,7 @@ public class PropertyApplicationController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ROLE_CLIENT', 'ROLE_OWNER')")
-    @Operation(summary = "Submit a bid", description = "Buyer submits an offer on a property. Notifies the listing agent in real-time.")
+    @Operation(summary = "Submit a bid")
     public ResponseEntity<PropertyApplicationResponse> submit(
             @Valid @RequestBody PropertyApplicationRequest request, Authentication auth) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -46,30 +46,46 @@ public class PropertyApplicationController {
         return ResponseEntity.ok(applicationService.getById(id));
     }
 
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_COMPANY_ADMIN', 'ROLE_MANAGER')")
+    @Operation(summary = "Get all applications (paginated)", description = "page, size, sortBy (default: createdAt)")
+    public ResponseEntity<PageResponse<PropertyApplicationResponse>> getAll(
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy) {
+        return ResponseEntity.ok(applicationService.getAll(page, size, sortBy));
+    }
+
     @GetMapping("/my")
     @PreAuthorize("hasAnyRole('ROLE_CLIENT', 'ROLE_OWNER')")
-    @Operation(summary = "Get my submitted bids")
-    public ResponseEntity<List<PropertyApplicationResponse>> getMyApplications(Authentication auth) {
-        return ResponseEntity.ok(applicationService.getMyApplications((String) auth.getPrincipal()));
+    @Operation(summary = "Get my submitted bids (paginated)")
+    public ResponseEntity<PageResponse<PropertyApplicationResponse>> getMyApplications(
+            Authentication auth,
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(applicationService.getMyApplications((String) auth.getPrincipal(), page, size));
     }
 
     @GetMapping("/property/{propertyId}")
     @PreAuthorize("hasAnyRole('ROLE_AGENT', 'ROLE_COMPANY_ADMIN', 'ROLE_MANAGER')")
-    @Operation(summary = "Get all bids on a property")
-    public ResponseEntity<List<PropertyApplicationResponse>> getByProperty(@PathVariable Long propertyId) {
-        return ResponseEntity.ok(applicationService.getByProperty(propertyId));
+    @Operation(summary = "Get all bids on a property (paginated)")
+    public ResponseEntity<PageResponse<PropertyApplicationResponse>> getByProperty(
+            @PathVariable Long propertyId,
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(applicationService.getByProperty(propertyId, page, size));
     }
 
     @PatchMapping("/{id}/accept")
     @PreAuthorize("hasAnyRole('ROLE_AGENT', 'ROLE_OWNER', 'ROLE_COMPANY_ADMIN', 'ROLE_MANAGER')")
-    @Operation(summary = "Accept a bid", description = "Notifies the buyer in real-time")
+    @Operation(summary = "Accept a bid")
     public ResponseEntity<PropertyApplicationResponse> accept(@PathVariable Long id, Authentication auth) {
         return ResponseEntity.ok(applicationService.accept(id, (String) auth.getPrincipal()));
     }
 
     @PatchMapping("/{id}/reject")
     @PreAuthorize("hasAnyRole('ROLE_AGENT', 'ROLE_OWNER', 'ROLE_COMPANY_ADMIN', 'ROLE_MANAGER')")
-    @Operation(summary = "Reject a bid", description = "Notifies the buyer in real-time")
+    @Operation(summary = "Reject a bid")
     public ResponseEntity<PropertyApplicationResponse> reject(@PathVariable Long id, Authentication auth) {
         return ResponseEntity.ok(applicationService.reject(id, (String) auth.getPrincipal()));
     }
