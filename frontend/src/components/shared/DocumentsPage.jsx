@@ -1,4 +1,5 @@
-import { useRef, useState } from "react"
+import { useRef, useState, useEffect } from "react"
+import { documentsApi } from "../../api/documents.api"
 import { UploadCloud, FileText, FileImage, File, X, CheckCircle, Clock, XCircle, AlertCircle } from "lucide-react"
 import { DOCUMENT_TYPE_LABELS } from "../../constants/enums"
 
@@ -57,19 +58,28 @@ function DropZone({ onFile }) {
 
 // ── Upload modal ───────────────────────────────────────────────────────────
 function UploadModal({ request, onClose, onUploaded }) {
-  const [file, setFile]       = useState(null)
+  const [file, setFile]           = useState(null)
   const [uploading, setUploading] = useState(false)
-  const [done, setDone]       = useState(false)
+  const [done, setDone]           = useState(false)
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!file) return
     setUploading(true)
-    // Simulate upload delay — replace with real API call
-    setTimeout(() => {
-      setUploading(false)
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("type", request.type)
+      if (request.propertyId)     formData.append("propertyId",     request.propertyId)
+      if (request.applicationId)  formData.append("applicationId",  request.applicationId)
+      if (request.transactionId)  formData.append("transactionId",  request.transactionId)
+      const newDoc = await documentsApi.upload(formData)
       setDone(true)
-      setTimeout(() => { onUploaded(request.id, file); onClose() }, 800)
-    }, 1200)
+      setTimeout(() => { onUploaded(request.id, newDoc); onClose() }, 800)
+    } catch {
+      // error already toasted by axios interceptor
+    } finally {
+      setUploading(false)
+    }
   }
 
   return (
@@ -115,20 +125,22 @@ function UploadModal({ request, onClose, onUploaded }) {
 }
 
 // ── Main shared component ──────────────────────────────────────────────────
-export default function DocumentsPage({ requests: initialRequests, uploaded: initialUploaded }) {
-  const [requests, setRequests]   = useState(initialRequests)
-  const [uploaded, setUploaded]   = useState(initialUploaded)
-  const [uploading, setUploading] = useState(null) // request being uploaded
+export default function DocumentsPage() {
+  const [requests, setRequests]   = useState([])
+  const [uploaded, setUploaded]   = useState([])
+  const [uploading, setUploading] = useState(null)
   const [tab, setTab]             = useState("REQUESTED")
 
-  const handleUploaded = (requestId, file) => {
+  useEffect(() => {
+    documentsApi.getMy().then(docs => {
+      setRequests(docs.filter(d => d.status === "REQUESTED"))
+      setUploaded(docs.filter(d => d.status !== "REQUESTED"))
+    }).catch(() => {})
+  }, [])
+
+  const handleUploaded = (requestId, newDoc) => {
     setRequests(r => r.filter(x => x.id !== requestId))
-    setUploaded(u => [{
-      id: Date.now(), name: file.name, type: "ID_DOCUMENT",
-      relatedLabel: uploading?.relatedLabel ?? "",
-      mime: file.type, size: `${(file.size / 1024).toFixed(0)} KB`,
-      status: "PENDING", uploadedAt: new Date().toISOString().split("T")[0],
-    }, ...u])
+    setUploaded(u => [newDoc, ...u])
     setUploading(null)
   }
 

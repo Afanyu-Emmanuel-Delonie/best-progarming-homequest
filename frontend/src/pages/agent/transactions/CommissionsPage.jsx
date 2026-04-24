@@ -1,66 +1,81 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
+import { Loader2 } from "lucide-react"
 import { StatCard, Badge } from "../../../components/shared/AdminUI"
 import DataTable from "../../../components/shared/DataTable"
 import { fmtCurrency, fmtCurrencyFull, fmtDate } from "../../../utils/formatters"
-import { COMMISSION_STATUS, AGENT_ROLE_STYLES, PAGE_SIZE } from "../../../constants/enums"
+import { COMMISSION_STATUS, PAGE_SIZE } from "../../../constants/enums"
+import { transactionsApi } from "../../../api/transactions.api"
 
-const MOCK = [
-  { id: 1, transactionId: 2, propertyTitle: "Luxury Suburban Villa",   amount: 7452,  role: "LISTING", status: "PAID",    paidAt: "2025-07-10T00:00:00", createdAt: "2025-07-08T14:05:00" },
-  { id: 2, transactionId: 6, propertyTitle: "Family House in Suburbs", amount: 6318,  role: "LISTING", status: "PAID",    paidAt: "2025-07-11T00:00:00", createdAt: "2025-07-09T15:45:00" },
-  { id: 3, transactionId: 8, propertyTitle: "Mega Mansion Estate",     amount: 14175, role: "LISTING", status: "PAID",    paidAt: "2025-07-07T00:00:00", createdAt: "2025-07-05T08:00:00" },
-  { id: 4, transactionId: 1, propertyTitle: "Modern Downtown Apt",     amount: 9179,  role: "SELLING", status: "PENDING", paidAt: null,                  createdAt: "2025-07-10T09:22:00" },
-  { id: 5, transactionId: 9, propertyTitle: "Starter Home",            amount: 2389,  role: "LISTING", status: "PENDING", paidAt: null,                  createdAt: "2025-07-14T07:55:00" },
-]
-
-const roleBadge = (r) => { const s = AGENT_ROLE_STYLES[r]; return <Badge {...s} /> }
+const RECIPIENT_LABELS = {
+  LISTING_AGENT: { bg: "#EFF6FF", color: "#1D4ED8", label: "Listing" },
+  SELLING_AGENT: { bg: "#F5F3FF", color: "#6D28D9", label: "Selling" },
+  COMPANY:       { bg: "#FEF9C3", color: "#92400E", label: "Company" },
+}
+const roleBadge = (r) => { const s = RECIPIENT_LABELS[r]; return s ? <Badge {...s} /> : r }
 
 export default function CommissionsPage() {
-  const [page, setPage] = useState(0)
+  const [data, setData]     = useState([])
+  const [loading, setLoading] = useState(true)
+  const [page, setPage]     = useState(0)
+
+  useEffect(() => {
+    transactionsApi.getMyCommissions()
+      .then(res => setData(Array.isArray(res) ? res : []))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
 
   const stats = useMemo(() => ({
-    total:   fmtCurrency(MOCK.reduce((s, c) => s + c.amount, 0)),
-    paid:    fmtCurrency(MOCK.filter(c => c.status === "PAID").reduce((s, c) => s + c.amount, 0)),
-    pending: fmtCurrency(MOCK.filter(c => c.status === "PENDING").reduce((s, c) => s + c.amount, 0)),
-    count:   MOCK.length,
-  }), [])
+    total:   fmtCurrency(data.reduce((s, c) => s + Number(c.amount ?? 0), 0)),
+    paid:    fmtCurrency(data.filter(c => c.status === "PAID").reduce((s, c) => s + Number(c.amount ?? 0), 0)),
+    pending: fmtCurrency(data.filter(c => c.status === "PENDING").reduce((s, c) => s + Number(c.amount ?? 0), 0)),
+    count:   data.length,
+  }), [data])
 
-  const totalPages = Math.ceil(MOCK.length / PAGE_SIZE)
-  const pageRows   = MOCK.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+  const totalPages = Math.ceil(data.length / PAGE_SIZE)
+  const pageRows   = data.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
   const columns = [
     { key: "transactionId", label: "Txn",      render: (v) => <span style={{ color: "var(--color-primary)", fontWeight: 600 }}>#{v}</span> },
-    { key: "propertyTitle", label: "Property", render: (v) => <span style={{ fontWeight: 500, color: "var(--color-text)" }}>{v}</span> },
-    { key: "role",          label: "Role",     render: (v) => roleBadge(v) },
-    { key: "amount",        label: "Amount",   render: (v) => <span style={{ fontWeight: 700, color: "#15803D" }}>{fmtCurrencyFull(v)}</span> },
-    { key: "status",        label: "Status",   render: (v) => { const s = COMMISSION_STATUS[v]; return <span style={{ backgroundColor: s.bg, color: s.color, borderRadius: "999px", padding: "2px 10px", fontSize: "0.72rem", fontWeight: 600 }}>{s.label}</span> } },
-    { key: "paidAt",        label: "Paid On",  render: (v) => <span style={{ color: "var(--color-text-subtle)", whiteSpace: "nowrap" }}>{v ? fmtDate(v) : "—"}</span> },
+    { key: "recipientType", label: "Role",      render: (v) => roleBadge(v) },
+    { key: "amount",        label: "Amount",    render: (v) => <span style={{ fontWeight: 700, color: "#15803D" }}>{fmtCurrencyFull(Number(v))}</span> },
+    { key: "status",        label: "Status",    render: (v) => { const s = COMMISSION_STATUS[v]; return s ? <span style={{ backgroundColor: s.bg, color: s.color, borderRadius: "999px", padding: "2px 10px", fontSize: "0.72rem", fontWeight: 600 }}>{s.label}</span> : v } },
+    { key: "paidAt",        label: "Paid On",   render: (v) => <span style={{ color: "var(--color-text-subtle)", whiteSpace: "nowrap" }}>{v ? fmtDate(v) : "—"}</span> },
+    { key: "createdAt",     label: "Earned On", render: (v) => v ? fmtDate(v) : "—" },
   ]
 
   const commissionCard = (c) => {
-    const st = COMMISSION_STATUS[c.status]
+    const st = COMMISSION_STATUS[c.status] ?? COMMISSION_STATUS.PENDING
     return (
-      <div style={{ backgroundColor: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "14px", overflow: "hidden", boxShadow: "0 1px 4px #0000000a" }}>
-        {/* Header */}
+      <div style={{ backgroundColor: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "14px", overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.875rem 1rem", borderBottom: "1px solid var(--color-border)", backgroundColor: "var(--color-bg-muted)" }}>
           <div style={{ minWidth: 0 }}>
-            <p style={{ margin: 0, fontWeight: 700, fontSize: "0.9375rem", color: "var(--color-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.propertyTitle}</p>
-            <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "var(--color-text-muted)" }}>Transaction #{c.transactionId}</p>
+            <p style={{ margin: 0, fontWeight: 700, fontSize: "0.9375rem", color: "var(--color-text)" }}>Transaction #{c.transactionId}</p>
+            <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "var(--color-text-muted)" }}>{c.recipientType}</p>
           </div>
           <span style={{ backgroundColor: st.bg, color: st.color, borderRadius: "999px", padding: "3px 10px", fontSize: "0.75rem", fontWeight: 600, flexShrink: 0, marginLeft: "0.75rem" }}>{st.label}</span>
         </div>
-        {/* Body */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0 }}>
-          <Cell label="Amount"  value={<span style={{ fontWeight: 700, color: "#15803D", fontSize: "1rem" }}>{fmtCurrencyFull(c.amount)}</span>} border />
-          <Cell label="Role"    value={roleBadge(c.role)} />
-          <Cell label="Earned"  value={fmtDate(c.createdAt)} border bottom />
-          <Cell label="Paid On" value={c.paidAt ? fmtDate(c.paidAt) : "—"} bottom />
+          <Cell label="Amount"   value={<span style={{ fontWeight: 700, color: "#15803D", fontSize: "1rem" }}>{fmtCurrencyFull(Number(c.amount))}</span>} border />
+          <Cell label="Role"     value={roleBadge(c.recipientType)} />
+          <Cell label="Earned"   value={c.createdAt ? fmtDate(c.createdAt) : "—"} border bottom />
+          <Cell label="Paid On"  value={c.paidAt    ? fmtDate(c.paidAt)    : "—"} bottom />
         </div>
       </div>
     )
   }
 
+  if (loading) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "60vh", gap: "0.75rem", color: "var(--color-text-muted)" }}>
+      <Loader2 size={20} style={{ animation: "spin 1s linear infinite" }} /> Loading commissions…
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    </div>
+  )
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+      <p style={{ margin: 0, fontWeight: 700, fontSize: "1.1rem", color: "var(--color-text)" }}>Commissions</p>
+
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem" }}>
         <StatCard label="Total Earned" value={stats.total}   color="#15803D" />
         <StatCard label="Paid Out"     value={stats.paid}    color="#1D4ED8" />
@@ -69,16 +84,9 @@ export default function CommissionsPage() {
       </div>
 
       <DataTable
-        columns={columns}
-        rows={pageRows}
-        total={MOCK.length}
-        emptyMsg="No commission records"
-        page={page}
-        totalPages={totalPages}
-        totalElements={MOCK.length}
-        pageSize={PAGE_SIZE}
-        onPageChange={setPage}
-        cardRender={commissionCard}
+        columns={columns} rows={pageRows} total={data.length} emptyMsg="No commission records"
+        page={page} totalPages={totalPages} totalElements={data.length}
+        pageSize={PAGE_SIZE} onPageChange={setPage} cardRender={commissionCard}
       />
     </div>
   )
@@ -86,11 +94,7 @@ export default function CommissionsPage() {
 
 function Cell({ label, value, border, bottom }) {
   return (
-    <div style={{
-      padding: "0.75rem 1rem",
-      borderRight:  border  ? "1px solid var(--color-border)" : "none",
-      borderBottom: !bottom ? "1px solid var(--color-border)" : "none",
-    }}>
+    <div style={{ padding: "0.75rem 1rem", borderRight: border ? "1px solid var(--color-border)" : "none", borderBottom: !bottom ? "1px solid var(--color-border)" : "none" }}>
       <p style={{ margin: "0 0 3px", fontSize: "0.72rem", fontWeight: 600, color: "var(--color-text-subtle)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</p>
       <div style={{ fontSize: "0.875rem", color: "var(--color-text-muted)", fontWeight: 500 }}>{value}</div>
     </div>

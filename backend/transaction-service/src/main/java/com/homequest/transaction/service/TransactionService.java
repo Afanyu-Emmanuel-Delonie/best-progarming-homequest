@@ -227,6 +227,7 @@ public class TransactionService {
                 .recipientType(c.getRecipientType())
                 .amount(c.getAmount())
                 .status(c.getStatus())
+                .paidAt(c.getPaidAt())
                 .createdAt(c.getCreatedAt())
                 .build();
     }

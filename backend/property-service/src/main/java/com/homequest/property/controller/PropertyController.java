@@ -36,7 +36,7 @@ public class PropertyController {
     private final PropertyService propertyService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ROLE_AGENT', 'ROLE_COMPANY_ADMIN', 'ROLE_MANAGER')")
+    @PreAuthorize("hasAnyRole('ROLE_AGENT', 'ROLE_ADMIN')")
     @Operation(summary = "Create a property listing", description = "Agent registers a new property. The listing agent is set from the JWT token.")
     public ResponseEntity<PropertyResponse> create(@Valid @RequestBody PropertyRequest request, Authentication auth) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -99,7 +99,7 @@ public class PropertyController {
     }
 
     @GetMapping("/company/{companyId}")
-    @PreAuthorize("hasAnyRole('ROLE_COMPANY_ADMIN', 'ROLE_MANAGER')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Get all properties for a company (paginated)")
     public ResponseEntity<PageResponse<PropertyResponse>> getByCompany(
             @PathVariable Long companyId,
@@ -109,35 +109,35 @@ public class PropertyController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ROLE_AGENT', 'ROLE_COMPANY_ADMIN', 'ROLE_MANAGER')")
+    @PreAuthorize("hasAnyRole('ROLE_AGENT', 'ROLE_ADMIN')")
     @Operation(summary = "Update a property")
     public ResponseEntity<PropertyResponse> update(@PathVariable Long id, @Valid @RequestBody PropertyRequest request) {
         return ResponseEntity.ok(propertyService.update(id, request));
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('ROLE_AGENT', 'ROLE_COMPANY_ADMIN', 'ROLE_MANAGER')")
+    @PreAuthorize("hasAnyRole('ROLE_AGENT', 'ROLE_ADMIN')")
     @Operation(summary = "Update property status", description = "AVAILABLE, UNDER_OFFER, SOLD, RENTED, INACTIVE")
     public ResponseEntity<PropertyResponse> updateStatus(@PathVariable Long id, @RequestParam PropertyStatus status) {
         return ResponseEntity.ok(propertyService.updateStatus(id, status));
     }
 
     @PatchMapping("/{id}/selling-agent")
-    @PreAuthorize("hasAnyRole('ROLE_COMPANY_ADMIN', 'ROLE_MANAGER')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Assign a selling agent to a property")
     public ResponseEntity<PropertyResponse> assignSellingAgent(@PathVariable Long id, @RequestParam String agentPublicId) {
         return ResponseEntity.ok(propertyService.assignSellingAgent(id, agentPublicId));
     }
 
     @PatchMapping("/{id}/buyer")
-    @PreAuthorize("hasAnyRole('ROLE_AGENT', 'ROLE_COMPANY_ADMIN', 'ROLE_MANAGER')")
+    @PreAuthorize("hasAnyRole('ROLE_AGENT', 'ROLE_ADMIN')")
     @Operation(summary = "Assign a buyer to a property")
     public ResponseEntity<PropertyResponse> assignBuyer(@PathVariable Long id, @RequestParam String buyerPublicId) {
         return ResponseEntity.ok(propertyService.assignBuyer(id, buyerPublicId));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ROLE_COMPANY_ADMIN', 'ROLE_MANAGER')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Delete a property")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         propertyService.delete(id);

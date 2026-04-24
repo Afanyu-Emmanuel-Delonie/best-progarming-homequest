@@ -77,6 +77,17 @@ public class PropertyApplicationService {
     }
 
     @Transactional(readOnly = true)
+    public PageResponse<PropertyApplicationResponse> getByListingAgent(String agentPublicId, int page, int size) {
+        List<Long> propertyIds = propertyRepository.findByListingAgentPublicId(
+                agentPublicId, PageRequest.of(0, Integer.MAX_VALUE, Sort.by("createdAt")))
+                .stream().map(p -> p.getId()).collect(Collectors.toList());
+        if (propertyIds.isEmpty()) return PageResponse.<PropertyApplicationResponse>builder()
+                .content(List.of()).page(page).size(size).totalElements(0).totalPages(0).build();
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return toPage(applicationRepository.findByPropertyIdIn(propertyIds, pageable));
+    }
+
+    @Transactional(readOnly = true)
     public PageResponse<PropertyApplicationResponse> getByProperty(Long propertyId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         return toPage(applicationRepository.findByPropertyId(propertyId, pageable));

@@ -16,6 +16,7 @@ import com.homequest.property.model.PropertyApplication;
 @Repository
 public interface PropertyApplicationRepository extends JpaRepository<PropertyApplication, Long> {
     Page<PropertyApplication> findByPropertyId(Long propertyId, Pageable pageable);
+    Page<PropertyApplication> findByPropertyIdIn(List<Long> propertyIds, Pageable pageable);
     Page<PropertyApplication> findByBuyerPublicId(String buyerPublicId, Pageable pageable);
     Page<PropertyApplication> findByStatus(ApplicationStatus status, Pageable pageable);
     Page<PropertyApplication> findAll(Pageable pageable);

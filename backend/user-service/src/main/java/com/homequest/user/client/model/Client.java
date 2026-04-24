@@ -38,6 +38,9 @@ public class Client {
     @Column
     private String phone;
 
+    @Column(name = "company_id")
+    private Long companyId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

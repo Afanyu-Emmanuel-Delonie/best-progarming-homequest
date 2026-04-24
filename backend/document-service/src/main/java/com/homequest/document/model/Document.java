@@ -42,6 +42,14 @@ public class Document {
     @Column(name = "property_id")
     private Long propertyId;
 
+    @Column(name = "application_id")
+    private Long applicationId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private DocumentStatus status = DocumentStatus.PENDING;
+
     @Column(name = "uploaded_by", nullable = false)
     private String uploadedBy;
 

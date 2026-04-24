@@ -1,11 +1,16 @@
 import { useState, useRef, useEffect } from "react"
-import { useLocation } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import { Menu, Bell, ChevronDown, LogOut, User, Settings, Check, Home } from "lucide-react"
+import { useDispatch } from "react-redux"
+import { logout } from "../../store/slices/authSlice"
 import { PAGE_TITLES } from "../../constants/nav"
 
 export default function Header({ fullName, role, onToggleSidebar, profileHref = "/admin/profile", settingsHref = "/admin/settings" }) {
   const { pathname } = useLocation()
-  const title = PAGE_TITLES[pathname] ?? "Dashboard"
+  const navigate     = useNavigate()
+  const dispatch     = useDispatch()
+  const title        = PAGE_TITLES[pathname] ?? "Dashboard"
+  const signOut      = () => { dispatch(logout()); navigate("/login") }
 
   const [notifOpen, setNotifOpen]     = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
@@ -143,7 +148,7 @@ export default function Header({ fullName, role, onToggleSidebar, profileHref = 
               <a href={profileHref}  style={menuItemStyle}><User size={14} /> My Profile</a>
               <a href={settingsHref} style={menuItemStyle}><Settings size={14} /> Settings</a>
               <div style={{ height: "1px", background: "var(--color-border)", margin: "0.25rem 0" }} />
-              <button onClick={() => {/* dispatch logout */}} style={{ ...menuItemStyle, width: "100%", border: "none", cursor: "pointer", color: "var(--color-error)" }}>
+              <button onClick={signOut} style={{ ...menuItemStyle, width: "100%", border: "none", cursor: "pointer", color: "var(--color-error)" }}>
                 <LogOut size={14} /> Sign out
               </button>
             </div>

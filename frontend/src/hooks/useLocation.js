@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { locationService } from "../services/locationService"
+import { locationApi } from "../api"
 
 const EMPTY_LIST = []
 
@@ -16,7 +16,7 @@ export function useLocationPicker() {
 
   // Load provinces once
   useEffect(() => {
-    locationService.getProvinces().then(setProvinces).catch(() => {})
+    locationApi.getProvinces().then(setProvinces).catch(() => {})
   }, [])
 
   const pick = (level, code) => {
@@ -24,22 +24,22 @@ export function useLocationPicker() {
       case "province":
         setLocation({ provinceCode: code, districtCode: "", sectorCode: "", cellCode: "", villageCode: "" })
         setDistricts(EMPTY_LIST); setSectors(EMPTY_LIST); setCells(EMPTY_LIST); setVillages(EMPTY_LIST)
-        if (code) locationService.getChildren(code).then(setDistricts).catch(() => {})
+        if (code) locationApi.getChildren(code).then(setDistricts).catch(() => {})
         break
       case "district":
         setLocation(l => ({ ...l, districtCode: code, sectorCode: "", cellCode: "", villageCode: "" }))
         setSectors(EMPTY_LIST); setCells(EMPTY_LIST); setVillages(EMPTY_LIST)
-        if (code) locationService.getChildren(code).then(setSectors).catch(() => {})
+        if (code) locationApi.getChildren(code).then(setSectors).catch(() => {})
         break
       case "sector":
         setLocation(l => ({ ...l, sectorCode: code, cellCode: "", villageCode: "" }))
         setCells(EMPTY_LIST); setVillages(EMPTY_LIST)
-        if (code) locationService.getChildren(code).then(setCells).catch(() => {})
+        if (code) locationApi.getChildren(code).then(setCells).catch(() => {})
         break
       case "cell":
         setLocation(l => ({ ...l, cellCode: code, villageCode: "" }))
         setVillages(EMPTY_LIST)
-        if (code) locationService.getChildren(code).then(setVillages).catch(() => {})
+        if (code) locationApi.getChildren(code).then(setVillages).catch(() => {})
         break
       case "village":
         setLocation(l => ({ ...l, villageCode: code }))

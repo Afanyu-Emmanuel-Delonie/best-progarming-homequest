@@ -12,6 +12,7 @@ import {
   Search,
   Heart,
   FolderOpen,
+  UserCheck,
 } from "lucide-react"
 import { createElement } from "react"
 
@@ -20,6 +21,7 @@ const icon = (Component) => createElement(Component, { size: 18 })
 export const ADMIN_NAV = [
   { label: "Dashboard",    href: "/admin",                icon: icon(LayoutDashboard), end: true },
   { label: "Users",        href: "/admin/users",          icon: icon(Users) },
+  { label: "Clients",      href: "/admin/clients",        icon: icon(UserCheck) },
   { label: "Properties",   href: "/admin/properties",     icon: icon(Building2) },
   { label: "Applications", href: "/admin/applications",   icon: icon(ClipboardList) },
   { label: "Transactions", href: "/admin/transactions",   icon: icon(ArrowLeftRight) },
@@ -45,6 +47,7 @@ export const OWNER_NAV = [
 export const AGENT_NAV = [
   { label: "Dashboard",    href: "/agent",                icon: icon(LayoutDashboard), end: true },
   { label: "My Listings",  href: "/agent/listings",       icon: icon(Home),            end: true },
+  { label: "My Clients",   href: "/agent/clients",        icon: icon(UserCheck) },
   { label: "Applications", href: "/agent/applications",   icon: icon(ClipboardList) },
   { label: "Transactions", href: "/agent/transactions",   icon: icon(ArrowLeftRight) },
   { label: "Documents",    href: "/agent/documents",      icon: icon(FolderOpen) },
@@ -52,32 +55,24 @@ export const AGENT_NAV = [
   { label: "Profile",      href: "/agent/profile",        icon: icon(UserCircle) },
 ]
 
-export const COMPANY_NAV = [
-  { label: "Dashboard",    href: "/company",              icon: icon(LayoutDashboard), end: true },
-  { label: "Agents",       href: "/company/agents",       icon: icon(Users) },
-  { label: "Properties",   href: "/company/properties",   icon: icon(Building2) },
-  { label: "Transactions", href: "/company/transactions", icon: icon(ArrowLeftRight) },
-  { label: "Documents",    href: "/company/documents",    icon: icon(FolderOpen) },
-  { label: "Reports",      href: "/company/reports",      icon: icon(FileText) },
-  { label: "Settings",     href: "/company/settings",     icon: icon(Settings) },
-]
-
 export const PAGE_TITLES = {
   "/client":               "Dashboard",
   "/client/applications":  "My Applications",
   "/client/documents":     "My Documents",
   "/client/saved":         "Saved Properties",
-  "/owner/documents":      "My Documents",
   "/owner":                "Dashboard",
   "/owner/properties":     "My Properties",
   "/owner/transactions":   "Transactions",
+  "/owner/documents":      "My Documents",
   "/admin":                "Dashboard",
+  "/admin/clients":       "Clients",
   "/admin/users":          "Users",
   "/admin/properties":     "Properties",
   "/admin/applications":   "Applications",
   "/admin/transactions":   "Transactions",
   "/admin/documents":      "Documents",
   "/admin/settings":       "Settings",
+  "/agent/clients":       "My Clients",
   "/agent":                "Dashboard",
   "/agent/listings":       "My Listings",
   "/agent/applications":   "Applications",
@@ -85,11 +80,4 @@ export const PAGE_TITLES = {
   "/agent/documents":      "Documents",
   "/agent/commissions":    "Commissions",
   "/agent/profile":        "My Profile",
-  "/company":              "Dashboard",
-  "/company/agents":       "Agents",
-  "/company/properties":   "Properties",
-  "/company/transactions": "Transactions",
-  "/company/documents":    "Documents",
-  "/company/reports":      "Reports",
-  "/company/settings":     "Settings",
 }

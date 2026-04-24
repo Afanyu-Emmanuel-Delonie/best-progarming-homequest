@@ -99,38 +99,25 @@ public class DataSeeder implements ApplicationRunner {
         log.info("Company seeded with id={}", companyId);
 
         // ── 3. AUTH USERS ─────────────────────────────────────────────
-        User adminUser = saveUser("John", "Admin", "admin@homequest.rw", "Admin@1234", Role.ROLE_COMPANY_ADMIN);
-        User managerUser = saveUser("Jane", "Manager", "manager@homequest.rw", "Manager@1234", Role.ROLE_MANAGER);
-        User agent1User = saveUser("Alice", "Uwase", "alice@homequest.rw", "Agent@1234", Role.ROLE_AGENT);
-        User agent2User = saveUser("Bob", "Mugisha", "bob@homequest.rw", "Agent@1234", Role.ROLE_AGENT);
-        User ownerUser = saveUser("Eric", "Nkurunziza", "owner@homequest.rw", "Owner@1234", Role.ROLE_OWNER);
-        User clientUser = saveUser("Marie", "Ingabire", "client@homequest.rw", "Client@1234", Role.ROLE_CLIENT);
+        User adminUser  = saveUser("John",  "Admin",      "admin@homequest.rw",  "Admin@1234",  Role.ROLE_ADMIN);
+        User agent1User = saveUser("Alice", "Uwase",      "alice@homequest.rw",  "Agent@1234",  Role.ROLE_AGENT);
+        User agent2User = saveUser("Bob",   "Mugisha",    "bob@homequest.rw",    "Agent@1234",  Role.ROLE_AGENT);
+        User ownerUser  = saveUser("Eric",  "Nkurunziza", "owner@homequest.rw",  "Owner@1234",  Role.ROLE_OWNER);
+        User clientUser = saveUser("Marie", "Ingabire",   "client@homequest.rw", "Client@1234", Role.ROLE_CUSTOMER);
 
         log.info("Auth users seeded.");
 
         // ── 4. PROFILES ───────────────────────────────────────────────
-        Agent admin = agentRepository.save(Agent.builder()
-                .userPublicId(adminUser.getPublicId().toString())
-                .firstName("John").lastName("Admin")
-                .phone("+250780000001").licenseNumber("LIC-ADMIN-001")
-                .companyId(companyId).status(AgentStatus.ACTIVE).build());
-
-        Agent manager = agentRepository.save(Agent.builder()
-                .userPublicId(managerUser.getPublicId().toString())
-                .firstName("Jane").lastName("Manager")
-                .phone("+250780000002").licenseNumber("LIC-MGR-001")
-                .companyId(companyId).status(AgentStatus.ACTIVE).build());
-
         Agent alice = agentRepository.save(Agent.builder()
                 .userPublicId(agent1User.getPublicId().toString())
                 .firstName("Alice").lastName("Uwase")
-                .phone("+250780000003").licenseNumber("LIC-AGT-001")
+                .phone("+250780000002").licenseNumber("LIC-AGT-001")
                 .companyId(companyId).status(AgentStatus.ACTIVE).build());
 
         Agent bob = agentRepository.save(Agent.builder()
                 .userPublicId(agent2User.getPublicId().toString())
                 .firstName("Bob").lastName("Mugisha")
-                .phone("+250780000004").licenseNumber("LIC-AGT-002")
+                .phone("+250780000003").licenseNumber("LIC-AGT-002")
                 .companyId(companyId).status(AgentStatus.ACTIVE).build());
 
         Owner owner = ownerRepository.save(Owner.builder()
@@ -291,12 +278,11 @@ public class DataSeeder implements ApplicationRunner {
         log.info("✅ Database seeding complete.");
         log.info("──────────────────────────────────────────");
         log.info("Test credentials:");
-        log.info("  Company Admin : admin@homequest.rw   / Admin@1234");
-        log.info("  Manager       : manager@homequest.rw / Manager@1234");
-        log.info("  Agent Alice   : alice@homequest.rw   / Agent@1234");
-        log.info("  Agent Bob     : bob@homequest.rw     / Agent@1234");
-        log.info("  Owner         : owner@homequest.rw   / Owner@1234");
-        log.info("  Client        : client@homequest.rw  / Client@1234");
+        log.info("  Admin       : admin@homequest.rw  / Admin@1234");
+        log.info("  Agent Alice : alice@homequest.rw  / Agent@1234");
+        log.info("  Agent Bob   : bob@homequest.rw    / Agent@1234");
+        log.info("  Owner       : owner@homequest.rw  / Owner@1234");
+        log.info("  Customer    : client@homequest.rw / Client@1234");
         log.info("──────────────────────────────────────────");
     }
 

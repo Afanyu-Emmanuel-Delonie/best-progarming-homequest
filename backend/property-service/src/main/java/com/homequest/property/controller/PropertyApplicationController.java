@@ -47,7 +47,7 @@ public class PropertyApplicationController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_COMPANY_ADMIN', 'ROLE_MANAGER')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Get all applications (paginated)", description = "page, size, sortBy (default: createdAt)")
     public ResponseEntity<PageResponse<PropertyApplicationResponse>> getAll(
             @RequestParam(defaultValue = "0")  int page,
@@ -66,8 +66,18 @@ public class PropertyApplicationController {
         return ResponseEntity.ok(applicationService.getMyApplications((String) auth.getPrincipal(), page, size));
     }
 
+    @GetMapping("/my-listings")
+    @PreAuthorize("hasRole('ROLE_AGENT')")
+    @Operation(summary = "Get all applications on my listed properties")
+    public ResponseEntity<PageResponse<PropertyApplicationResponse>> getMyListingApplications(
+            Authentication auth,
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "100") int size) {
+        return ResponseEntity.ok(applicationService.getByListingAgent((String) auth.getPrincipal(), page, size));
+    }
+
     @GetMapping("/property/{propertyId}")
-    @PreAuthorize("hasAnyRole('ROLE_AGENT', 'ROLE_COMPANY_ADMIN', 'ROLE_MANAGER')")
+    @PreAuthorize("hasAnyRole('ROLE_AGENT', 'ROLE_ADMIN')")
     @Operation(summary = "Get all bids on a property (paginated)")
     public ResponseEntity<PageResponse<PropertyApplicationResponse>> getByProperty(
             @PathVariable Long propertyId,
@@ -77,14 +87,14 @@ public class PropertyApplicationController {
     }
 
     @PatchMapping("/{id}/accept")
-    @PreAuthorize("hasAnyRole('ROLE_AGENT', 'ROLE_OWNER', 'ROLE_COMPANY_ADMIN', 'ROLE_MANAGER')")
+    @PreAuthorize("hasAnyRole('ROLE_AGENT', 'ROLE_OWNER', 'ROLE_ADMIN')")
     @Operation(summary = "Accept a bid")
     public ResponseEntity<PropertyApplicationResponse> accept(@PathVariable Long id, Authentication auth) {
         return ResponseEntity.ok(applicationService.accept(id, (String) auth.getPrincipal()));
     }
 
     @PatchMapping("/{id}/reject")
-    @PreAuthorize("hasAnyRole('ROLE_AGENT', 'ROLE_OWNER', 'ROLE_COMPANY_ADMIN', 'ROLE_MANAGER')")
+    @PreAuthorize("hasAnyRole('ROLE_AGENT', 'ROLE_OWNER', 'ROLE_ADMIN')")
     @Operation(summary = "Reject a bid")
     public ResponseEntity<PropertyApplicationResponse> reject(@PathVariable Long id, Authentication auth) {
         return ResponseEntity.ok(applicationService.reject(id, (String) auth.getPrincipal()));

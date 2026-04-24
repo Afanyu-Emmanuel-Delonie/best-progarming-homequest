@@ -1,7 +1,16 @@
 import { useState, useEffect } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { Home, Menu, X } from "lucide-react"
+import { useSelector } from "react-redux"
+import { decodeToken } from "../../store/slices/authSlice"
 import { ROUTES } from "../../constants/routes"
+
+const ROLE_HOME = {
+  ROLE_ADMIN:    ROUTES.ADMIN,
+  ROLE_AGENT:    ROUTES.AGENT,
+  ROLE_OWNER:    ROUTES.OWNER,
+  ROLE_CUSTOMER: ROUTES.CLIENT,
+}
 
 const LINKS = [
   { label: "Home",        href: ROUTES.HOME },
@@ -17,6 +26,10 @@ const SECTIONS = LINKS.filter(l => l.section).map(l => l.section)
 export default function LandingNavbar() {
   const { pathname }            = useLocation()
   const navigate                = useNavigate()
+  const token                   = useSelector(s => s.auth.token)
+  const role                    = token ? decodeToken(token)?.role : null
+  const isLoggedIn              = !!token
+  const accountHref             = ROLE_HOME[role] ?? ROUTES.CLIENT
   const [open, setOpen]         = useState(false)
   const [scrollY, setScrollY]   = useState(0)
   const [activeSection, setActiveSection] = useState(null)
@@ -118,16 +131,17 @@ export default function LandingNavbar() {
 
           {/* Auth buttons */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexShrink: 0 }} className="nav-auth">
-            <Link to={ROUTES.LOGIN} style={{
-              padding: "0.45rem 1rem", borderRadius: "7px", fontSize: "0.875rem", fontWeight: 600,
-              textDecoration: "none", transition: "all 0.25s", color: textColor,
-              border: `1px solid ${solid ? "var(--color-border)" : "rgba(255,255,255,0.35)"}`,
-              backgroundColor: "transparent",
-            }}>
-              Sign in
-            </Link>
-            <Link to={ROUTES.REGISTER} style={{ padding: "0.45rem 1rem", borderRadius: "7px", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none", color: "#fff", backgroundColor: "var(--color-primary)" }}>
-              Get started
+            {isLoggedIn ? (
+              <Link to={accountHref} className="nav-btn-outline" style={{ padding: "0.45rem 1rem", borderRadius: "7px", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none", transition: "all 0.2s", color: textColor, border: `1px solid ${solid ? "var(--color-border)" : "rgba(255,255,255,0.35)"}`, backgroundColor: "transparent" }}>
+                My Account
+              </Link>
+            ) : (
+              <Link to={ROUTES.LOGIN} className="nav-btn-outline" style={{ padding: "0.45rem 1rem", borderRadius: "7px", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none", transition: "all 0.2s", color: textColor, border: `1px solid ${solid ? "var(--color-border)" : "rgba(255,255,255,0.35)"}`, backgroundColor: "transparent" }}>
+                Sign in
+              </Link>
+            )}
+            <Link to={ROUTES.PROPERTY_SEARCH} className="nav-btn-primary" style={{ padding: "0.45rem 1rem", borderRadius: "7px", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none", color: "#fff", backgroundColor: "var(--color-primary)" }}>
+              Find a Property
             </Link>
           </div>
 
@@ -156,11 +170,17 @@ export default function LandingNavbar() {
             )
           })}
           <div style={{ display: "flex", gap: "0.6rem", marginTop: "0.75rem", paddingTop: "0.75rem", borderTop: "1px solid var(--color-border)" }}>
-            <Link to={ROUTES.LOGIN} onClick={() => setOpen(false)} style={{ flex: 1, padding: "0.6rem", borderRadius: "8px", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none", color: "var(--color-text)", border: "1px solid var(--color-border)", textAlign: "center" }}>
-              Sign in
-            </Link>
-            <Link to={ROUTES.REGISTER} onClick={() => setOpen(false)} style={{ flex: 1, padding: "0.6rem", borderRadius: "8px", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none", color: "#fff", backgroundColor: "var(--color-primary)", textAlign: "center" }}>
-              Get started
+            {isLoggedIn ? (
+              <Link to={accountHref} onClick={() => setOpen(false)} style={{ flex: 1, padding: "0.6rem", borderRadius: "8px", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none", color: "var(--color-text)", border: "1px solid var(--color-border)", textAlign: "center" }}>
+                My Account
+              </Link>
+            ) : (
+              <Link to={ROUTES.LOGIN} onClick={() => setOpen(false)} style={{ flex: 1, padding: "0.6rem", borderRadius: "8px", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none", color: "var(--color-text)", border: "1px solid var(--color-border)", textAlign: "center" }}>
+                Sign in
+              </Link>
+            )}
+            <Link to={ROUTES.PROPERTY_SEARCH} onClick={() => setOpen(false)} style={{ flex: 1, padding: "0.6rem", borderRadius: "8px", fontSize: "0.875rem", fontWeight: 600, textDecoration: "none", color: "#fff", backgroundColor: "var(--color-primary)", textAlign: "center" }}>
+              Find a Property
             </Link>
           </div>
         </div>
@@ -178,6 +198,9 @@ export default function LandingNavbar() {
         }
         .nav-link:hover { background-color: rgba(128,128,128,0.08); }
         .nav-link.active { font-weight: 600; }
+        .nav-btn-outline:hover { background-color: rgba(128,128,128,0.08) !important; }
+        .nav-btn-primary:hover { background-color: var(--color-primary-dark) !important; transform: translateY(-1px); box-shadow: 0 4px 12px #FF4F0040; }
+        .nav-btn-primary { transition: background-color 0.2s, transform 0.15s, box-shadow 0.15s !important; }
         @media (max-width: 768px) {
           .nav-links     { display: none !important; }
           .nav-auth      { display: none !important; }

@@ -19,6 +19,7 @@ export const ROUTES = {
 
   // Admin
   ADMIN:             "/admin",
+  ADMIN_CLIENTS:        "/admin/clients",
   ADMIN_USERS:       "/admin/users",
   ADMIN_PROPERTIES:  "/admin/properties",
   ADMIN_APPLICATIONS:"/admin/applications",
@@ -28,6 +29,7 @@ export const ROUTES = {
 
   // Agent
   AGENT:             "/agent",
+  AGENT_CLIENTS:        "/agent/clients",
   AGENT_LISTINGS:    "/agent/listings",
   AGENT_LISTING_NEW: "/agent/listings/new",
   AGENT_APPLICATIONS:"/agent/applications",
@@ -44,13 +46,4 @@ export const ROUTES = {
   OWNER_PROPERTIES:  "/owner/properties",
   OWNER_TRANSACTIONS:"/owner/transactions",
 
-  // Company
-  COMPANY:           "/company",
-  COMPANY_AGENTS:    "/company/agents",
-  COMPANY_AGENT_DETAIL: "/company/agents/:id",
-  COMPANY_PROPERTIES:"/company/properties",
-  COMPANY_PROPERTY_NEW: "/company/properties/new",
-  COMPANY_TRANSACTIONS: "/company/transactions",
-  COMPANY_REPORTS:   "/company/reports",
-  COMPANY_SETTINGS:  "/company/settings",
 }

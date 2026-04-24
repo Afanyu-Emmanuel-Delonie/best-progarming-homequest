@@ -22,7 +22,7 @@ public class ProfileProvisioningService {
 
     public void provision(String userPublicId, String firstName, String lastName, String licenseNumber, Long companyId, Role role) {
         switch (role) {
-            case ROLE_AGENT, ROLE_MANAGER, ROLE_COMPANY_ADMIN -> agentRepository.save(
+            case ROLE_AGENT -> agentRepository.save(
                     Agent.builder()
                             .userPublicId(userPublicId)
                             .firstName(firstName)
@@ -36,7 +36,7 @@ public class ProfileProvisioningService {
                             .firstName(firstName)
                             .lastName(lastName)
                             .build());
-            case ROLE_CLIENT -> clientRepository.save(
+            case ROLE_CUSTOMER -> clientRepository.save(
                     Client.builder()
                             .userPublicId(userPublicId)
                             .firstName(firstName)

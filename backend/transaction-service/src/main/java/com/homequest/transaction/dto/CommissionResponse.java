@@ -18,5 +18,6 @@ public class CommissionResponse {
     private CommissionRecipientType recipientType;
     private BigDecimal amount;
     private CommissionStatus status;
+    private LocalDateTime paidAt;
     private LocalDateTime createdAt;
 }

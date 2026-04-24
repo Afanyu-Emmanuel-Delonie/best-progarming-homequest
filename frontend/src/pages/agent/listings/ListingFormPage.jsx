@@ -1,11 +1,13 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { ArrowLeft, Home } from "lucide-react"
+import { ArrowLeft, Home, Loader2 } from "lucide-react"
 import { PROPERTY_TYPE_LABELS, PROPERTY_STATUS } from "../../../constants/enums"
 import { ROUTES } from "../../../constants/routes"
 import { useLocationPicker } from "../../../hooks/useLocation"
 import LocationFields from "../../../components/shared/LocationFields"
 import ImageUpload from "../../../components/shared/ImageUpload"
+import { propertiesApi } from "../../../api/properties.api"
+import { toast } from "react-toastify"
 
 const EMPTY = {
   title: "", address: "",
@@ -46,7 +48,9 @@ export default function ListingFormPage() {
   const navigate    = useNavigate()
   const [form, setForm]     = useState(EMPTY)
   const [image, setImage]   = useState(null)
+  const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
+
   const { location, provinces, districts, sectors, cells, villages, pick } = useLocationPicker()
 
   const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: "" })) }
@@ -65,12 +69,36 @@ export default function ListingFormPage() {
     return e
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const e = validate()
     if (Object.keys(e).length) { setErrors(e); return }
-    // TODO: call API — send as FormData when imageFile is present
-    console.log("New listing:", { ...form, ...location, imageFile: image, price: Number(form.price), bedrooms: Number(form.bedrooms) || 0, bathrooms: Number(form.bathrooms), areaSqm: Number(form.areaSqm) })
-    navigate(ROUTES.AGENT_LISTINGS)
+    setLoading(true)
+    try {
+      await propertiesApi.create({
+        title:       form.title,
+        address:     form.address,
+        city:        location.districtName ?? "",
+        country:     "Rwanda",
+        price:       Number(form.price),
+        type:        form.type,
+        status:      form.status,
+        bedrooms:    Number(form.bedrooms) || 0,
+        bathrooms:   Number(form.bathrooms),
+        areaSqm:     Number(form.areaSqm),
+        description: form.description || null,
+        provinceCode: location.provinceCode,
+        districtCode: location.districtCode,
+        sectorCode:   location.sectorCode,
+        cellCode:     location.cellCode,
+        villageCode:  location.villageCode,
+      })
+      toast.success("Listing created")
+      navigate(ROUTES.AGENT_LISTINGS)
+    } catch {
+      // error toast handled by axios interceptor
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -160,9 +188,11 @@ export default function ListingFormPage() {
         <button onClick={() => navigate(ROUTES.AGENT_LISTINGS)} style={{ padding: "0.6rem 1.25rem", borderRadius: "9px", border: "1px solid var(--color-border)", background: "none", color: "var(--color-text-muted)", fontWeight: 500, fontSize: "0.875rem", cursor: "pointer", fontFamily: "inherit" }}>
           Cancel
         </button>
-        <button onClick={handleSubmit} style={{ padding: "0.6rem 1.5rem", borderRadius: "9px", border: "none", backgroundColor: "var(--color-primary)", color: "#fff", fontWeight: 600, fontSize: "0.875rem", cursor: "pointer", fontFamily: "inherit" }}>
-          Create Listing
+        <button onClick={handleSubmit} disabled={loading} style={{ padding: "0.6rem 1.5rem", borderRadius: "9px", border: "none", backgroundColor: "var(--color-primary)", color: "#fff", fontWeight: 600, fontSize: "0.875rem", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.75 : 1, fontFamily: "inherit", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+          {loading && <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />}
+          {loading ? "Creating…" : "Create Listing"}
         </button>
+        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
       </div>
     </div>
   )

@@ -108,7 +108,7 @@ export default function HeroSection() {
             <option value="" style={{ color: "#1A1A1A" }}>All types</option>
             {Object.entries(PROPERTY_TYPE_LABELS).map(([k, v]) => <option key={k} value={k} style={{ color: "#1A1A1A" }}>{v}</option>)}
           </select>
-          <button type="submit" style={{ display: "flex", alignItems: "center", gap: "0.45rem", padding: "0.75rem 1.5rem", borderRadius: "10px", border: "none", backgroundColor: "var(--color-primary)", color: "#fff", fontWeight: 600, fontSize: "0.875rem", fontFamily: "inherit", cursor: "pointer", flexShrink: 0 }}>
+          <button type="submit" className="hero-search-btn" style={{ display: "flex", alignItems: "center", gap: "0.45rem", padding: "0.75rem 1.5rem", borderRadius: "10px", border: "none", backgroundColor: "var(--color-primary)", color: "#fff", fontWeight: 600, fontSize: "0.875rem", fontFamily: "inherit", cursor: "pointer", flexShrink: 0 }}>
             <Search size={15} /> Search
           </button>
         </form>
@@ -133,6 +133,8 @@ export default function HeroSection() {
         @media (max-width: 768px) {
           .hero-section { min-height: 80vh !important; }
         }
+        .hero-search-btn:hover { background-color: var(--color-primary-dark) !important; transform: translateY(-1px); box-shadow: 0 4px 14px #FF4F0050; }
+        .hero-search-btn { transition: background-color 0.2s, transform 0.15s, box-shadow 0.15s; }
       `}</style>
 
     </section>

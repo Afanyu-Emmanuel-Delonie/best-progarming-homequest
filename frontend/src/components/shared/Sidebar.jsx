@@ -1,9 +1,14 @@
-import { NavLink } from "react-router-dom"
+import { NavLink, useNavigate } from "react-router-dom"
 import { Home, LogOut } from "lucide-react"
+import { useDispatch } from "react-redux"
+import { logout } from "../../store/slices/authSlice"
 import { ADMIN_NAV } from "../../constants/nav"
 
 export default function Sidebar({ collapsed, nav }) {
-  const navItems = nav ?? ADMIN_NAV
+  const dispatch  = useDispatch()
+  const navigate  = useNavigate()
+  const navItems  = nav ?? ADMIN_NAV
+  const signOut   = () => { dispatch(logout()); navigate("/login") }
   const w = collapsed ? "64px" : "240px"
 
   return (
@@ -83,7 +88,7 @@ export default function Sidebar({ collapsed, nav }) {
       {/* Sign out */}
       <div style={{ padding: "0.75rem 0.5rem", borderTop: "1px solid #ffffff1a" }}>
         <button
-          onClick={() => {/* dispatch logout */}}
+          onClick={signOut}
           title={collapsed ? "Sign out" : undefined}
           style={{
             display: "flex",

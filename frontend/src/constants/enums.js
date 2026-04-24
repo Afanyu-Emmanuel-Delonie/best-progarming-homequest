@@ -35,20 +35,18 @@ export const DOCUMENT_STATUS = {
 
 // ── Role styles ────────────────────────────────────────────────────────────
 export const ROLE_STYLES = {
-  ROLE_AGENT:         { bg: "#EFF6FF", color: "#1D4ED8", label: "Agent"         },
-  ROLE_CLIENT:        { bg: "#F5F3FF", color: "#6D28D9", label: "Client"        },
-  ROLE_OWNER:         { bg: "#FFF7ED", color: "#C2410C", label: "Owner"         },
-  ROLE_COMPANY_ADMIN: { bg: "#F0FDF4", color: "#15803D", label: "Company Admin" },
-  ROLE_MANAGER:       { bg: "#FEF9C3", color: "#92400E", label: "Manager"       },
+  ROLE_ADMIN:    { bg: "#FEF9C3", color: "#92400E", label: "Admin"    },
+  ROLE_AGENT:    { bg: "#EFF6FF", color: "#1D4ED8", label: "Agent"    },
+  ROLE_CUSTOMER: { bg: "#F5F3FF", color: "#6D28D9", label: "Customer" },
+  ROLE_OWNER:    { bg: "#FFF7ED", color: "#C2410C", label: "Owner"    },
 }
 
 export const ROLE_TABS = [
-  { key: "ALL",                label: "All"           },
-  { key: "ROLE_AGENT",         label: "Agents"        },
-  { key: "ROLE_CLIENT",        label: "Clients"       },
-  { key: "ROLE_OWNER",         label: "Owners"        },
-  { key: "ROLE_COMPANY_ADMIN", label: "Company Admins"},
-  { key: "ROLE_MANAGER",       label: "Managers"      },
+  { key: "ALL",           label: "All"       },
+  { key: "ROLE_ADMIN",    label: "Admins"    },
+  { key: "ROLE_AGENT",    label: "Agents"    },
+  { key: "ROLE_CUSTOMER", label: "Customers" },
+  { key: "ROLE_OWNER",    label: "Owners"    },
 ]
 
 // ── Property labels ────────────────────────────────────────────────────────

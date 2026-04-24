@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import { Mail, Phone, MapPin, Clock, Send } from "lucide-react"
-import toast from "react-hot-toast"
+import { toast } from "../../components/common/Toast"
 
 function useReveal() {
   const ref = useRef(null)

@@ -47,6 +47,9 @@ public class Commission {
     @Builder.Default
     private CommissionStatus status = CommissionStatus.PENDING;
 
+    @Column(name = "paid_at")
+    private LocalDateTime paidAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

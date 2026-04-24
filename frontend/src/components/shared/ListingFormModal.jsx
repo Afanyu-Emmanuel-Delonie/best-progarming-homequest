@@ -1,9 +1,11 @@
 import { useState } from "react"
-import { X, Home } from "lucide-react"
+import { X, Home, Loader2 } from "lucide-react"
 import { PROPERTY_TYPE_LABELS, PROPERTY_STATUS } from "../../constants/enums"
 import { useLocationPicker } from "../../hooks/useLocation"
 import LocationFields from "./LocationFields"
 import ImageUpload from "./ImageUpload"
+import { propertiesApi } from "../../api/properties.api"
+import { toast } from "react-toastify"
 
 const EMPTY = {
   title: "", address: "",
@@ -28,39 +30,55 @@ function Field({ label, error, children }) {
 }
 
 export default function ListingFormModal({ onClose, onSubmit, initial }) {
-  const [form, setForm]   = useState(initial ?? EMPTY)
-  const [image, setImage] = useState(null)
+  const [form, setForm]     = useState(initial ?? EMPTY)
+  const [image, setImage]   = useState(null)
   const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false)
   const { location, provinces, districts, sectors, cells, villages, pick } = useLocationPicker()
 
   const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: "" })) }
 
   const validate = () => {
     const e = {}
-    if (!form.title.trim())   e.title   = "Required"
-    if (!form.address.trim()) e.address = "Required"
-    if (!location.provinceCode) e.province = "Required"
-    if (!location.districtCode) e.district = "Required"
-    if (!location.cellCode)     e.cell     = "Required"
-    if (!location.villageCode)  e.village  = "Required"
+    if (!form.title.trim())       e.title       = "Required"
+    if (!form.description.trim()) e.description = "Required"
+    if (!form.address.trim())     e.address     = "Required"
+    if (!location.provinceCode)   e.province    = "Required"
+    if (!location.districtCode)   e.district    = "Required"
+    if (!location.cellCode)       e.cell        = "Required"
+    if (!location.villageCode)    e.village     = "Required"
     if (!form.price || isNaN(Number(form.price)) || Number(form.price) <= 0) e.price = "Enter a valid price"
     if (form.bathrooms === "" || isNaN(Number(form.bathrooms))) e.bathrooms = "Required"
     if (form.areaSqm   === "" || isNaN(Number(form.areaSqm)))  e.areaSqm   = "Required"
     return e
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const e = validate()
     if (Object.keys(e).length) { setErrors(e); return }
-    onSubmit({
-      ...form,
-      ...location,
-      imageFile: image,
-      price:     Number(form.price),
-      bedrooms:  Number(form.bedrooms)  || 0,
-      bathrooms: Number(form.bathrooms),
-      areaSqm:   Number(form.areaSqm),
-    })
+    setLoading(true)
+    try {
+      const payload = {
+        title:       form.title,
+        description: form.description,
+        address:     form.address,
+        city:        location.districtName ?? "",
+        country:     "Rwanda",
+        price:       Number(form.price),
+        type:        form.type,
+        bedrooms:    Number(form.bedrooms)  || 0,
+        bathrooms:   Number(form.bathrooms),
+        areaSqm:     Number(form.areaSqm),
+        ownerPublicId: form.ownerPublicId ?? null,
+      }
+      const created = await propertiesApi.create(payload)
+      toast.success("Listing created successfully")
+      onSubmit(created)
+    } catch (err) {
+      toast.error(err.message ?? "Failed to create listing")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -140,16 +158,20 @@ export default function ListingFormModal({ onClose, onSubmit, initial }) {
           {/* Image */}
           <ImageUpload value={image} onChange={setImage} error={errors.image} />
 
-          {/* Description */}
-          <Field label="Description (optional)">
-            <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 72 }} value={form.description} onChange={e => set("description", e.target.value)} placeholder="Brief description of the property…" />
+          {/* Description — required */}
+          <Field label="Description" error={errors.description}>
+            <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 80 }} value={form.description} onChange={e => set("description", e.target.value)} placeholder="Describe the property — location highlights, features, condition…" />
           </Field>
         </div>
 
         {/* Footer */}
         <div style={{ display: "flex", gap: "0.65rem", justifyContent: "flex-end", padding: "1rem 1.5rem", borderTop: "1px solid var(--color-border)", flexShrink: 0 }}>
           <button onClick={onClose} style={{ padding: "0.55rem 1.1rem", borderRadius: "9px", border: "1px solid var(--color-border)", background: "none", color: "var(--color-text-muted)", fontWeight: 500, fontSize: "0.8375rem", cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
-          <button onClick={handleSubmit} style={{ padding: "0.55rem 1.25rem", borderRadius: "9px", border: "none", backgroundColor: "var(--color-primary)", color: "#fff", fontWeight: 600, fontSize: "0.8375rem", cursor: "pointer", fontFamily: "inherit" }}>Create Listing</button>
+          <button onClick={handleSubmit} disabled={loading} style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.55rem 1.25rem", borderRadius: "9px", border: "none", backgroundColor: "var(--color-primary)", color: "#fff", fontWeight: 600, fontSize: "0.8375rem", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.75 : 1, fontFamily: "inherit" }}>
+            {loading && <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />}
+            {loading ? "Creating…" : "Create Listing"}
+          </button>
+          <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
         </div>
       </div>
     </>

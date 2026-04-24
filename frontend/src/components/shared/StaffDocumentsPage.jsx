@@ -117,15 +117,15 @@ function RequestModal({ onClose, onRequested, relatedOptions }) {
 }
 
 // ── Main component ─────────────────────────────────────────────────────────
-export default function StaffDocumentsPage({ documents: initialDocs, requests: initialRequests, relatedOptions }) {
+export default function StaffDocumentsPage({ documents: initialDocs, requests: initialRequests, relatedOptions, onVerify, onReject }) {
   const [docs, setDocs]           = useState(initialDocs)
   const [requests, setRequests]   = useState(initialRequests)
   const [tab, setTab]             = useState("DOCUMENTS")
   const [showRequest, setShowRequest] = useState(false)
   const [statusFilter, setStatusFilter] = useState("ALL")
 
-  const accept   = (id) => setDocs(d => d.map(x => x.id === id ? { ...x, status: "VERIFIED" } : x))
-  const reject   = (id) => setDocs(d => d.map(x => x.id === id ? { ...x, status: "REJECTED" } : x))
+  const accept   = (id) => { setDocs(d => d.map(x => x.id === id ? { ...x, status: "VERIFIED" } : x)); onVerify?.(id) }
+  const reject   = (id) => { setDocs(d => d.map(x => x.id === id ? { ...x, status: "REJECTED" } : x)); onReject?.(id) }
   const download = (doc) => {
     // In production: trigger real file download via signed URL
     const a = document.createElement("a")

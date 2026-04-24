@@ -35,7 +35,7 @@ public class AuthService {
             throw new IllegalArgumentException("Email already exists");
         }
 
-        Role role = Role.ROLE_AGENT;
+        Role role = Role.ROLE_CUSTOMER;
         if (request.getRole() != null) {
             try {
                 role = Role.valueOf(request.getRole().toUpperCase());

@@ -34,7 +34,7 @@ public class TransactionController {
     private final TransactionService transactionService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ROLE_AGENT', 'ROLE_COMPANY_ADMIN', 'ROLE_MANAGER')")
+    @PreAuthorize("hasAnyRole('ROLE_AGENT', 'ROLE_ADMIN')")
     @Operation(summary = "Create a transaction", description = "Automatically calculates: totalCommission = saleAmount × commissionRate, companyFee = 10%, listingAgent = 30% of remainder, sellingAgent = 70% of remainder")
     public ResponseEntity<TransactionResponse> create(@Valid @RequestBody TransactionRequest request, Authentication auth) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -77,7 +77,7 @@ public class TransactionController {
     }
 
     @GetMapping("/company/{companyId}")
-    @PreAuthorize("hasAnyRole('ROLE_COMPANY_ADMIN', 'ROLE_MANAGER')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "All transactions for a company")
     public ResponseEntity<List<TransactionResponse>> getByCompany(@PathVariable Long companyId) {
         return ResponseEntity.ok(transactionService.getByCompany(companyId));
@@ -91,14 +91,14 @@ public class TransactionController {
     }
 
     @GetMapping("/{id}/commissions")
-    @PreAuthorize("hasAnyRole('ROLE_COMPANY_ADMIN', 'ROLE_MANAGER')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "All commission records for a transaction")
     public ResponseEntity<List<CommissionResponse>> getTransactionCommissions(@PathVariable Long id) {
         return ResponseEntity.ok(transactionService.getCommissionsByTransaction(id));
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('ROLE_COMPANY_ADMIN', 'ROLE_MANAGER')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Update transaction status", description = "PENDING, COMPLETED, CANCELLED. Completing triggers real-time notifications to all parties.")
     public ResponseEntity<TransactionResponse> updateStatus(@PathVariable Long id, @RequestParam TransactionStatus status) {
         return ResponseEntity.ok(transactionService.updateStatus(id, status));

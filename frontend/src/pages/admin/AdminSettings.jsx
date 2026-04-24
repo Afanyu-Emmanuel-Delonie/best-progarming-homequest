@@ -72,8 +72,24 @@ export default function AdminSettings() {
 
 // ── Profile ────────────────────────────────────────────────────────────────
 function ProfileSection() {
-  const [form, setForm] = useState({ firstName: "Admin", lastName: "User", email: "admin@homequest.com", phone: "+1 555-0000", timezone: "America/New_York" })
+  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", timezone: "Africa/Kigali" })
   const set = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }))
+
+  useEffect(() => {
+    import("../../api/users.api").then(({ usersApi }) => {
+      // Load from Redux store instead of API since auth service has the data
+      const stored = JSON.parse(localStorage.getItem("auth") || "null")
+      if (stored?.user) {
+        const u = stored.user
+        setForm(f => ({
+          ...f,
+          firstName: u.firstName ?? u.username ?? "",
+          lastName:  u.lastName  ?? "",
+          email:     u.email     ?? "",
+        }))
+      }
+    })
+  }, [])
 
   return (
     <Section id="profile" title="Profile" description="Update your personal details and contact information.">

@@ -32,42 +32,44 @@ public class AgentController {
     private final AgentService agentService;
 
     @PostMapping("/me")
-    @PreAuthorize("hasRole('AGENT')")
-    public ResponseEntity<AgentResponse> createMyProfile(@Valid @RequestBody AgentRequest request,
-            Authentication auth) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(agentService.createProfile(getUserPublicId(auth), request));
+    @PreAuthorize("hasRole('ROLE_AGENT')")
+    public ResponseEntity<AgentResponse> createMyProfile(@Valid @RequestBody AgentRequest request, Authentication auth) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(agentService.createProfile(getUserPublicId(auth), request));
     }
 
     @GetMapping("/me")
-    @PreAuthorize("hasRole('AGENT')")
+    @PreAuthorize("hasRole('ROLE_AGENT')")
     public ResponseEntity<AgentResponse> getMyProfile(Authentication auth) {
         return ResponseEntity.ok(agentService.getByUserPublicId(getUserPublicId(auth)));
     }
 
     @PutMapping("/me")
-    @PreAuthorize("hasRole('AGENT')")
-    public ResponseEntity<AgentResponse> updateMyProfile(@Valid @RequestBody AgentRequest request,
-            Authentication auth) {
+    @PreAuthorize("hasRole('ROLE_AGENT')")
+    public ResponseEntity<AgentResponse> updateMyProfile(@Valid @RequestBody AgentRequest request, Authentication auth) {
         return ResponseEntity.ok(agentService.updateProfile(getUserPublicId(auth), request));
     }
 
+    @GetMapping("/by-public-id/{publicId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<AgentResponse> getByPublicId(@PathVariable String publicId) {
+        return ResponseEntity.ok(agentService.getByUserPublicId(publicId));
+    }
+
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('COMPANY_ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<AgentResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(agentService.getById(id));
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('COMPANY_ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<List<AgentResponse>> getByCompany(@RequestParam Long companyId) {
         return ResponseEntity.ok(agentService.getByCompany(companyId));
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('COMPANY_ADMIN', 'MANAGER')")
-    public ResponseEntity<AgentResponse> updateStatus(@PathVariable Long id,
-            @RequestParam AgentStatus status) {
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<AgentResponse> updateStatus(@PathVariable Long id, @RequestParam AgentStatus status) {
         return ResponseEntity.ok(agentService.updateStatus(id, status));
     }
 

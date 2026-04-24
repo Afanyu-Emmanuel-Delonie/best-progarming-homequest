@@ -1,20 +1,48 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { ArrowLeft, MapPin, BedDouble, Bath, Maximize2 } from "lucide-react"
+import { ArrowLeft, MapPin, BedDouble, Bath, Maximize2, Loader2 } from "lucide-react"
 import BidForm from "../../components/booking/BidForm"
-import applicationService from "../../services/applicationService"
+import { applicationsApi } from "../../api"
+import { propertiesApi } from "../../api/properties.api"
 import { fmtCurrencyFull } from "../../utils/formatters"
 import { PROPERTY_TYPE_LABELS } from "../../constants/enums"
 import { ROUTES } from "../../constants/routes"
-import { ALL_PROPERTIES } from "../../constants/properties"
-import toast from "react-hot-toast"
+import { useToast } from "../../components/common/Toast"
 
 export default function BookingFormPage() {
   const { id }       = useParams()
   const navigate     = useNavigate()
-  const [loading, setLoading] = useState(false)
+  const toast        = useToast()
+  const [p, setP]           = useState(null)
+  const [propLoading, setPropLoading] = useState(true)
+  const [loading, setLoading]         = useState(false)
 
-  const p = ALL_PROPERTIES.find(x => x.id === Number(id))
+  useEffect(() => {
+    propertiesApi.getById(id)
+      .then(setP)
+      .catch(() => setP(null))
+      .finally(() => setPropLoading(false))
+  }, [id])
+
+  const handleSubmit = async (data) => {
+    setLoading(true)
+    try {
+      await applicationsApi.submit({ ...data, propertyId: Number(id) })
+      toast.success("Application submitted!")
+      navigate(ROUTES.BOOKING_CONFIRM.replace(":id", id))
+    } catch (err) {
+      toast.error(err?.message || "Submission failed. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (propLoading) return (
+    <div style={{ paddingTop: 64, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.75rem", color: "var(--color-text-muted)" }}>
+      <Loader2 size={20} style={{ animation: "spin 1s linear infinite" }} /> Loading…
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    </div>
+  )
 
   if (!p) return (
     <div style={{ paddingTop: 64, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "1rem" }}>
@@ -23,18 +51,7 @@ export default function BookingFormPage() {
     </div>
   )
 
-  const handleSubmit = async (data) => {
-    setLoading(true)
-    try {
-      await applicationService.submit({ ...data, propertyId: p.id })
-      toast.success("Application submitted!")
-      navigate(ROUTES.BOOKING_CONFIRM.replace(":id", p.id))
-    } catch (err) {
-      toast.error(err?.message || "Submission failed. Please try again.")
-    } finally {
-      setLoading(false)
-    }
-  }
+  const img = p.images?.[0] ?? p.imageUrl ?? "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&q=80"
 
   return (
     <div style={{ paddingTop: 64, minHeight: "100vh", backgroundColor: "#FAFAFA" }}>
@@ -54,21 +71,21 @@ export default function BookingFormPage() {
 
           <aside style={{ width: 280, flexShrink: 0, position: "sticky", top: 80 }} className="booking-aside">
             <div style={{ backgroundColor: "#fff", borderRadius: "16px", border: "1px solid var(--color-border)", overflow: "hidden" }}>
-              <img src={p.images[0]} alt={p.title} style={{ width: "100%", height: 160, objectFit: "cover" }} />
+              <img src={img} alt={p.title} style={{ width: "100%", height: 160, objectFit: "cover" }} />
               <div style={{ padding: "1.25rem" }}>
                 <p style={{ margin: "0 0 0.2rem", fontWeight: 700, fontSize: "0.9375rem", color: "var(--color-text)" }}>{p.title}</p>
                 <p style={{ margin: "0 0 0.75rem", fontSize: "0.8rem", color: "var(--color-text-muted)", display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                  <MapPin size={11} style={{ color: "var(--color-primary)" }} />{p.city}, {p.province}
+                  <MapPin size={11} style={{ color: "var(--color-primary)" }} />{p.city}
                 </p>
-                <p style={{ margin: "0 0 0.875rem", fontWeight: 800, fontSize: "1.25rem", color: "var(--color-text)", letterSpacing: "-0.02em" }}>{fmtCurrencyFull(p.price)}</p>
+                <p style={{ margin: "0 0 0.875rem", fontWeight: 800, fontSize: "1.25rem", color: "var(--color-text)", letterSpacing: "-0.02em" }}>{fmtCurrencyFull(Number(p.price))}</p>
                 <div style={{ display: "flex", gap: "1rem", fontSize: "0.8rem", color: "var(--color-text-muted)", paddingTop: "0.875rem", borderTop: "1px solid var(--color-border)" }}>
                   {p.bedrooms > 0 && <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}><BedDouble size={13} />{p.bedrooms} bed</span>}
                   <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}><Bath size={13} />{p.bathrooms} bath</span>
-                  <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}><Maximize2 size={13} />{p.areaSqm} m²</span>
+                  {p.areaSqm && <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}><Maximize2 size={13} />{p.areaSqm} m²</span>}
                 </div>
                 <div style={{ marginTop: "0.75rem" }}>
-                  <span style={{ fontSize: "0.75rem", fontWeight: 600, backgroundColor: "var(--color-bg-muted, #F5F5F5)", color: "var(--color-text-muted)", borderRadius: "6px", padding: "0.2rem 0.6rem" }}>
-                    {PROPERTY_TYPE_LABELS[p.type]}
+                  <span style={{ fontSize: "0.75rem", fontWeight: 600, backgroundColor: "var(--color-bg-muted)", color: "var(--color-text-muted)", borderRadius: "6px", padding: "0.2rem 0.6rem" }}>
+                    {PROPERTY_TYPE_LABELS[p.type] ?? p.type}
                   </span>
                 </div>
               </div>
