@@ -3,11 +3,11 @@ import { useSelector } from "react-redux"
 import { Client } from "@stomp/stompjs"
 import { toast } from "react-toastify"
 
-function wsBrokerURL() {
+function wsBrokerURL(token) {
   const api = import.meta.env.VITE_API_URL ?? "http://localhost:8080"
   const url = new URL(api.startsWith("http") ? api : `http://${api}`)
   url.protocol = url.protocol === "https:" ? "wss:" : "ws:"
-  return `${url.origin}/ws`
+  return `${url.origin}/ws${token ? `?token=${token}` : ""}`
 }
 
 /**
@@ -15,13 +15,15 @@ function wsBrokerURL() {
  * Toasts when the event is addressed to the signed-in user; always dispatches `homequest:live`.
  */
 export function useLiveUpdates() {
+  const token    = useSelector((s) => s.auth.token)
   const publicId = useSelector((s) => s.auth.user?.publicId)
   const publicIdRef = useRef(publicId)
   publicIdRef.current = publicId
 
   useEffect(() => {
+    if (!token) return
     const client = new Client({
-      brokerURL: wsBrokerURL(),
+      brokerURL: wsBrokerURL(token),
       reconnectDelay: 5000,
       onConnect: () => {
         client.subscribe("/topic/events", (message) => {
@@ -43,5 +45,5 @@ export function useLiveUpdates() {
     return () => {
       client.deactivate()
     }
-  }, [])
+  }, [token])
 }

@@ -16,7 +16,7 @@ export default function ClientApplicationsPage() {
 
   useEffect(() => {
     applicationsApi.getMy()
-      .then(setAll)
+      .then(res => setAll(res?.content ?? res ?? []))
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])

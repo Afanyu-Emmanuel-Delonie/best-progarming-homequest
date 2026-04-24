@@ -14,7 +14,7 @@ export default function ClientDashboard() {
   const [applications, setApplications] = useState([])
 
   useEffect(() => {
-    applicationsApi.getMy().then(setApplications).catch(() => {})
+    applicationsApi.getMy().then(res => setApplications(res?.content ?? res ?? [])).catch(() => {})
   }, [])
 
   const pending  = applications.filter(a => a.status === "PENDING").length
