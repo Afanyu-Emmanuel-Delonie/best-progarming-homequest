@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.homequest.user.agent.dto.AgentCardResponse;
 import com.homequest.user.agent.dto.AgentRequest;
 import com.homequest.user.agent.dto.AgentResponse;
 import com.homequest.user.agent.model.AgentStatus;
@@ -55,7 +56,13 @@ public class AgentController {
         return ResponseEntity.ok(agentService.getByUserPublicId(publicId));
     }
 
-    @GetMapping("/{id}")
+    /** Public: top agents for marketing (no auth). */
+    @GetMapping("/top")
+    public ResponseEntity<List<AgentCardResponse>> getTopAgents(@RequestParam(defaultValue = "8") int limit) {
+        return ResponseEntity.ok(agentService.getTopPublicAgents(limit));
+    }
+
+    @GetMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<AgentResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(agentService.getById(id));
@@ -67,7 +74,7 @@ public class AgentController {
         return ResponseEntity.ok(agentService.getByCompany(companyId));
     }
 
-    @PatchMapping("/{id}/status")
+    @PatchMapping("/{id:\\d+}/status")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<AgentResponse> updateStatus(@PathVariable Long id, @RequestParam AgentStatus status) {
         return ResponseEntity.ok(agentService.updateStatus(id, status));

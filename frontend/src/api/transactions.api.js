@@ -9,5 +9,5 @@ export const transactionsApi = {
   getMyOwner:       ()           => client.get("/transactions/my/owner").then(r => r.data),
   getMyPurchases:   ()           => client.get("/transactions/my/purchases").then(r => r.data),
   getMyCommissions: ()           => client.get("/transactions/my/commissions").then(r => r.data),
-  getByCompany:     (companyId)  => client.get(`/transactions/company/${companyId}`).then(r => r.data),
+  getAllForAdmin:   ()           => client.get("/transactions/admin").then(r => r.data),
 }

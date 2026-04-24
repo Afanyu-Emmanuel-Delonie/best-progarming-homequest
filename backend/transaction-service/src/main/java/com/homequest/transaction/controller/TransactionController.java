@@ -41,7 +41,7 @@ public class TransactionController {
                 .body(transactionService.create(request, (String) auth.getPrincipal()));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get transaction by ID")
     public ResponseEntity<TransactionResponse> getById(@PathVariable Long id) {
@@ -70,10 +70,17 @@ public class TransactionController {
     }
 
     @GetMapping("/my/purchases")
-    @PreAuthorize("hasAnyRole('ROLE_CLIENT', 'ROLE_OWNER')")
+    @PreAuthorize("hasAnyRole('ROLE_CUSTOMER', 'ROLE_OWNER')")
     @Operation(summary = "My purchase transactions (as buyer)")
     public ResponseEntity<List<TransactionResponse>> getMyPurchases(Authentication auth) {
         return ResponseEntity.ok(transactionService.getByBuyer((String) auth.getPrincipal()));
+    }
+
+    @GetMapping("/admin")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Operation(summary = "All transactions (admin)")
+    public ResponseEntity<List<TransactionResponse>> getAllForAdmin() {
+        return ResponseEntity.ok(transactionService.getAll());
     }
 
     @GetMapping("/company/{companyId}")
@@ -90,14 +97,14 @@ public class TransactionController {
         return ResponseEntity.ok(transactionService.getCommissionsByAgent((String) auth.getPrincipal()));
     }
 
-    @GetMapping("/{id}/commissions")
+    @GetMapping("/{id:\\d+}/commissions")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "All commission records for a transaction")
     public ResponseEntity<List<CommissionResponse>> getTransactionCommissions(@PathVariable Long id) {
         return ResponseEntity.ok(transactionService.getCommissionsByTransaction(id));
     }
 
-    @PatchMapping("/{id}/status")
+    @PatchMapping("/{id:\\d+}/status")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Update transaction status", description = "PENDING, COMPLETED, CANCELLED. Completing triggers real-time notifications to all parties.")
     public ResponseEntity<TransactionResponse> updateStatus(@PathVariable Long id, @RequestParam TransactionStatus status) {

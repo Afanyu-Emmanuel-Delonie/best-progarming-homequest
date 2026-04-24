@@ -16,6 +16,9 @@ public class DocumentResponse {
     private Long propertyId;
     private Long applicationId;
     private String uploadedBy;
+    private String requestedBy;
+    private String recipientPublicId;
+    private String description;
     private DocumentStatus status;
     private LocalDateTime createdAt;
 }

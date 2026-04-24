@@ -16,6 +16,8 @@ import com.homequest.property.model.Property;
 import com.homequest.property.model.PropertyStatus;
 import com.homequest.property.model.PropertyType;
 import com.homequest.property.repository.PropertyRepository;
+import com.homequest.gateway.notification.NotificationEvent;
+import com.homequest.gateway.notification.NotificationService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 public class PropertyService {
 
     private final PropertyRepository propertyRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public PropertyResponse create(PropertyRequest request, String listingAgentPublicId, Long companyId) {
@@ -41,6 +44,7 @@ public class PropertyService {
                 .listingAgentPublicId(listingAgentPublicId)
                 .ownerPublicId(request.getOwnerPublicId())
                 .companyId(companyId)
+                .imageUrl(request.getImageUrl())
                 .build();
         return toResponse(propertyRepository.save(property));
     }
@@ -105,6 +109,7 @@ public class PropertyService {
         property.setBathrooms(request.getBathrooms());
         property.setAreaSqm(request.getAreaSqm());
         if (request.getType() != null) property.setType(request.getType());
+        if (request.getImageUrl() != null) property.setImageUrl(request.getImageUrl());
         return toResponse(propertyRepository.save(property));
     }
 
@@ -112,7 +117,18 @@ public class PropertyService {
     public PropertyResponse updateStatus(Long id, PropertyStatus status) {
         Property property = findOrThrow(id);
         property.setStatus(status);
-        return toResponse(propertyRepository.save(property));
+        PropertyResponse response = toResponse(propertyRepository.save(property));
+        if (property.getListingAgentPublicId() != null) {
+            notificationService.notifyUser(property.getListingAgentPublicId(),
+                    NotificationEvent.builder()
+                            .type(NotificationEvent.Types.PROPERTY_STATUS_CHANGED)
+                            .title("Listing status updated")
+                            .message("Property #" + id + " is now " + status)
+                            .recipientPublicId(property.getListingAgentPublicId())
+                            .payload(response)
+                            .build());
+        }
+        return response;
     }
 
     @Transactional
@@ -166,6 +182,7 @@ public class PropertyService {
                 .ownerPublicId(p.getOwnerPublicId())
                 .buyerPublicId(p.getBuyerPublicId())
                 .companyId(p.getCompanyId())
+                .imageUrl(p.getImageUrl())
                 .createdAt(p.getCreatedAt())
                 .updatedAt(p.getUpdatedAt())
                 .build();

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Users, Home, FileText, DollarSign, Clock, ArrowRight, UserPlus, X, Plus, Loader2 } from "lucide-react"
+import { Home, FileText, DollarSign, Clock, ArrowRight, UserPlus, X, Plus, Loader2 } from "lucide-react"
 import { fmtCurrency } from "../../utils/formatters"
 import KpiCard from "../../components/shared/KpiCard"
 import { APPLICATION_STATUS, TRANSACTION_STATUS, PROPERTY_STATUS } from "../../constants/enums"
@@ -30,7 +30,7 @@ export default function AdminDashboard() {
     Promise.all([
       propertiesApi.getAll({ page: 0, size: 100 }),
       applicationsApi.getAll({ page: 0, size: 100 }),
-      transactionsApi.getByCompany(1),
+      transactionsApi.getAllForAdmin(),
     ]).then(([p, a, t]) => {
       setProperties(p.content   ?? p ?? [])
       setApplications(a.content ?? a ?? [])

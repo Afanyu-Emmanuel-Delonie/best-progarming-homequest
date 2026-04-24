@@ -29,6 +29,7 @@ public class PropertyResponse {
     private String ownerPublicId;
     private String buyerPublicId;
     private Long companyId;
+    private String imageUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

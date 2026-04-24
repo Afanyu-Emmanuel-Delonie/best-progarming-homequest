@@ -15,7 +15,7 @@ const COLUMNS = [
     ],
   },
   {
-    heading: "Company",
+    heading: "About",
     links: [
       { label: "About Us",          href: ROUTES.ABOUT },
       { label: "How It Works",      href: `${ROUTES.HOME}#how-it-works` },
@@ -31,7 +31,6 @@ const COLUMNS = [
       { label: "Register",          href: ROUTES.REGISTER },
       { label: "Agent Portal",      href: ROUTES.AGENT },
       { label: "Owner Portal",      href: ROUTES.OWNER },
-      { label: "Company Portal",    href: ROUTES.COMPANY },
     ],
   },
 ]

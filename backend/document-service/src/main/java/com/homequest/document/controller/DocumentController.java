@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.homequest.document.dto.DocumentRequest;
+import com.homequest.document.dto.DocumentRequestDto;
 import com.homequest.document.dto.DocumentResponse;
 import com.homequest.document.service.DocumentService;
 
@@ -34,6 +35,19 @@ public class DocumentController {
     public ResponseEntity<DocumentResponse> upload(@Valid @RequestBody DocumentRequest request, Authentication auth) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(documentService.upload(request, (String) auth.getPrincipal()));
+    }
+
+    @PostMapping("/request")
+    @PreAuthorize("hasAnyRole('ROLE_AGENT', 'ROLE_ADMIN')")
+    public ResponseEntity<DocumentResponse> requestDocument(@Valid @RequestBody DocumentRequestDto dto, Authentication auth) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(documentService.requestDocument(dto, (String) auth.getPrincipal()));
+    }
+
+    @GetMapping("/requested/me")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<DocumentResponse>> getMyRequested(Authentication auth) {
+        return ResponseEntity.ok(documentService.getRequestedForUser((String) auth.getPrincipal()));
     }
 
     @GetMapping("/uploader/{publicId}")

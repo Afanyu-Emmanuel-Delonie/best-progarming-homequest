@@ -1,4 +1,5 @@
 export { authApi }          from "./auth.api"
+export { agentsApi }        from "./agents.api"
 export { propertiesApi }    from "./properties.api"
 export { applicationsApi }  from "./applications.api"
 export { usersApi, clientsApi } from "./users.api"

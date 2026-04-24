@@ -50,6 +50,21 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DataSeeder implements ApplicationRunner {
 
+    /* Unsplash — hotlink-friendly demo assets (no API key). */
+    private static final String IMG_APT        = "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&q=80";
+    private static final String IMG_APT2     = "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&q=80";
+    private static final String IMG_PENT     = "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&q=80";
+    private static final String IMG_VILLA    = "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80";
+    private static final String IMG_VILLA2   = "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&q=80";
+    private static final String IMG_HOUSE    = "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=1200&q=80";
+    private static final String IMG_HOUSE2   = "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=1200&q=80";
+    private static final String IMG_OFFICE   = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80";
+    private static final String IMG_OFFICE2  = "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80";
+    private static final String IMG_LAND     = "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200&q=80";
+    private static final String IMG_RETAIL   = "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&q=80";
+    private static final String IMG_AGENT_F  = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&q=80";
+    private static final String IMG_AGENT_M  = "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=600&q=80";
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AgentRepository agentRepository;
@@ -112,12 +127,14 @@ public class DataSeeder implements ApplicationRunner {
                 .userPublicId(agent1User.getPublicId().toString())
                 .firstName("Alice").lastName("Uwase")
                 .phone("+250780000002").licenseNumber("LIC-AGT-001")
+                .profileImage(IMG_AGENT_F)
                 .companyId(companyId).status(AgentStatus.ACTIVE).build());
 
         Agent bob = agentRepository.save(Agent.builder()
                 .userPublicId(agent2User.getPublicId().toString())
                 .firstName("Bob").lastName("Mugisha")
                 .phone("+250780000003").licenseNumber("LIC-AGT-002")
+                .profileImage(IMG_AGENT_M)
                 .companyId(companyId).status(AgentStatus.ACTIVE).build());
 
         Owner owner = ownerRepository.save(Owner.builder()
@@ -128,7 +145,9 @@ public class DataSeeder implements ApplicationRunner {
         Client client = clientRepository.save(Client.builder()
                 .userPublicId(clientUser.getPublicId().toString())
                 .firstName("Marie").lastName("Ingabire")
-                .phone("+250780000006").build());
+                .phone("+250780000006")
+                .companyId(companyId)
+                .build());
 
         log.info("Profiles seeded.");
 
@@ -144,6 +163,7 @@ public class DataSeeder implements ApplicationRunner {
                 .locationCode(gasabo.getCode())
                 .listingAgentPublicId(alice.getUserPublicId())
                 .ownerPublicId(owner.getUserPublicId())
+                .imageUrl(IMG_APT)
                 .companyId(companyId).build());
 
         Property prop2 = propertyRepository.save(Property.builder()
@@ -157,6 +177,7 @@ public class DataSeeder implements ApplicationRunner {
                 .locationCode(nyarugenge.getCode())
                 .listingAgentPublicId(alice.getUserPublicId())
                 .ownerPublicId(owner.getUserPublicId())
+                .imageUrl(IMG_VILLA)
                 .companyId(companyId).build());
 
         Property prop3 = propertyRepository.save(Property.builder()
@@ -171,6 +192,7 @@ public class DataSeeder implements ApplicationRunner {
                 .listingAgentPublicId(bob.getUserPublicId())
                 .sellingAgentPublicId(alice.getUserPublicId())
                 .ownerPublicId(owner.getUserPublicId())
+                .imageUrl(IMG_OFFICE)
                 .companyId(companyId).build());
 
         Property prop4 = propertyRepository.save(Property.builder()
@@ -186,6 +208,105 @@ public class DataSeeder implements ApplicationRunner {
                 .sellingAgentPublicId(bob.getUserPublicId())
                 .ownerPublicId(owner.getUserPublicId())
                 .buyerPublicId(clientUser.getPublicId().toString())
+                .imageUrl(IMG_HOUSE)
+                .companyId(companyId).build());
+
+        propertyRepository.save(Property.builder()
+                .title("Skyline Penthouse in Nyarugenge")
+                .description("Top-floor residence with wraparound terrace and city views.")
+                .price(new BigDecimal("285000.00"))
+                .listingPrice(new BigDecimal("285000.00"))
+                .address("KN 12 Ave").city("Kigali").country("Rwanda")
+                .bedrooms(3).bathrooms(3).areaSqm(new BigDecimal("195.00"))
+                .type(PropertyType.APARTMENT).status(PropertyStatus.AVAILABLE)
+                .locationCode(nyarugenge.getCode())
+                .listingAgentPublicId(alice.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .imageUrl(IMG_PENT)
+                .companyId(companyId).build());
+
+        propertyRepository.save(Property.builder()
+                .title("Lakeside Villa — Rubavu")
+                .description("Large windows, garden, and easy access to Lake Kivu.")
+                .price(new BigDecimal("410000.00"))
+                .listingPrice(new BigDecimal("410000.00"))
+                .address("Lake Rd 4").city("Rubavu").country("Rwanda")
+                .bedrooms(4).bathrooms(3).areaSqm(new BigDecimal("360.00"))
+                .type(PropertyType.VILLA).status(PropertyStatus.AVAILABLE)
+                .locationCode(musanze.getCode())
+                .listingAgentPublicId(bob.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .imageUrl(IMG_VILLA2)
+                .companyId(companyId).build());
+
+        propertyRepository.save(Property.builder()
+                .title("Studio Loft in Gasabo")
+                .description("Ideal for young professionals — high ceilings and modern kitchen.")
+                .price(new BigDecimal("68000.00"))
+                .listingPrice(new BigDecimal("68000.00"))
+                .address("KG 200 St").city("Kigali").country("Rwanda")
+                .bedrooms(1).bathrooms(1).areaSqm(new BigDecimal("52.00"))
+                .type(PropertyType.APARTMENT).status(PropertyStatus.AVAILABLE)
+                .locationCode(gasabo.getCode())
+                .listingAgentPublicId(alice.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .imageUrl(IMG_APT2)
+                .companyId(companyId).build());
+
+        propertyRepository.save(Property.builder()
+                .title("Retail Corner Unit — CBD")
+                .description("Corner visibility, high foot traffic, ready for fit-out.")
+                .price(new BigDecimal("142000.00"))
+                .listingPrice(new BigDecimal("142000.00"))
+                .address("KN 3 St").city("Kigali").country("Rwanda")
+                .bedrooms(0).bathrooms(2).areaSqm(new BigDecimal("165.00"))
+                .type(PropertyType.COMMERCIAL).status(PropertyStatus.AVAILABLE)
+                .locationCode(nyarugenge.getCode())
+                .listingAgentPublicId(bob.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .imageUrl(IMG_RETAIL)
+                .companyId(companyId).build());
+
+        propertyRepository.save(Property.builder()
+                .title("Development Land — Musanze")
+                .description("Level plot with road frontage; suitable for residential or hospitality.")
+                .price(new BigDecimal("95000.00"))
+                .listingPrice(new BigDecimal("95000.00"))
+                .address("NR 501").city("Musanze").country("Rwanda")
+                .bedrooms(0).bathrooms(0).areaSqm(new BigDecimal("2500.00"))
+                .type(PropertyType.LAND).status(PropertyStatus.AVAILABLE)
+                .locationCode(musanze.getCode())
+                .listingAgentPublicId(bob.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .imageUrl(IMG_LAND)
+                .companyId(companyId).build());
+
+        propertyRepository.save(Property.builder()
+                .title("Townhouse with Rooftop — Gasabo")
+                .description("Four bedrooms, garage, and rooftop terrace for entertaining.")
+                .price(new BigDecimal("198000.00"))
+                .listingPrice(new BigDecimal("198000.00"))
+                .address("KG 45 St").city("Kigali").country("Rwanda")
+                .bedrooms(4).bathrooms(3).areaSqm(new BigDecimal("220.00"))
+                .type(PropertyType.HOUSE).status(PropertyStatus.AVAILABLE)
+                .locationCode(gasabo.getCode())
+                .listingAgentPublicId(alice.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .imageUrl(IMG_HOUSE2)
+                .companyId(companyId).build());
+
+        propertyRepository.save(Property.builder()
+                .title("Corporate HQ Floors — Nyarugenge")
+                .description("Two contiguous floors, raised floors, backup power.")
+                .price(new BigDecimal("265000.00"))
+                .listingPrice(new BigDecimal("265000.00"))
+                .address("KN 88 Ave").city("Kigali").country("Rwanda")
+                .bedrooms(0).bathrooms(6).areaSqm(new BigDecimal("890.00"))
+                .type(PropertyType.OFFICE).status(PropertyStatus.AVAILABLE)
+                .locationCode(nyarugenge.getCode())
+                .listingAgentPublicId(bob.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .imageUrl(IMG_OFFICE2)
                 .companyId(companyId).build());
 
         log.info("Properties seeded.");

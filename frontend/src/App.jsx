@@ -46,10 +46,11 @@ import OwnerDocumentsPage    from "./pages/owner/documents/OwnerDocumentsPage"
 
 import PrivateRoute from "./guards/PrivateRoute"
 import RoleGuard    from "./guards/RoleGuard"
+import { useLiveUpdates } from "./hooks/useLiveUpdates"
 
-export default function App() {
+function AppShell() {
+  useLiveUpdates()
   return (
-    <BrowserRouter>
       <Routes>
 
         {/* Public */}
@@ -127,6 +128,13 @@ export default function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+  )
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppShell />
     </BrowserRouter>
   )
 }

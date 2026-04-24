@@ -31,7 +31,7 @@ public class PropertyApplicationController {
     private final PropertyApplicationService applicationService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ROLE_CLIENT', 'ROLE_OWNER')")
+    @PreAuthorize("hasAnyRole('ROLE_CUSTOMER', 'ROLE_OWNER')")
     @Operation(summary = "Submit a bid")
     public ResponseEntity<PropertyApplicationResponse> submit(
             @Valid @RequestBody PropertyApplicationRequest request, Authentication auth) {
@@ -57,7 +57,7 @@ public class PropertyApplicationController {
     }
 
     @GetMapping("/my")
-    @PreAuthorize("hasAnyRole('ROLE_CLIENT', 'ROLE_OWNER')")
+    @PreAuthorize("hasAnyRole('ROLE_CUSTOMER', 'ROLE_OWNER')")
     @Operation(summary = "Get my submitted bids (paginated)")
     public ResponseEntity<PageResponse<PropertyApplicationResponse>> getMyApplications(
             Authentication auth,
@@ -101,7 +101,7 @@ public class PropertyApplicationController {
     }
 
     @PatchMapping("/{id}/withdraw")
-    @PreAuthorize("hasAnyRole('ROLE_CLIENT', 'ROLE_OWNER')")
+    @PreAuthorize("hasAnyRole('ROLE_CUSTOMER', 'ROLE_OWNER')")
     @Operation(summary = "Withdraw my bid")
     public ResponseEntity<PropertyApplicationResponse> withdraw(@PathVariable Long id, Authentication auth) {
         return ResponseEntity.ok(applicationService.withdraw(id, (String) auth.getPrincipal()));

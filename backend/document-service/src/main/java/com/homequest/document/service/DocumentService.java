@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.homequest.document.dto.DocumentRequest;
+import com.homequest.document.dto.DocumentRequestDto;
 import com.homequest.document.dto.DocumentResponse;
 import com.homequest.document.model.Document;
 import com.homequest.document.model.DocumentStatus;
@@ -29,6 +30,22 @@ public class DocumentService {
                 .propertyId(request.getPropertyId())
                 .applicationId(request.getApplicationId())
                 .uploadedBy(uploaderPublicId)
+                .build();
+        return toResponse(documentRepository.save(doc));
+    }
+
+    @Transactional
+    public DocumentResponse requestDocument(DocumentRequestDto dto, String requesterPublicId) {
+        Document doc = Document.builder()
+                .name(dto.getDescription())
+                .type(dto.getType())
+                .propertyId(dto.getPropertyId())
+                .applicationId(dto.getApplicationId())
+                .requestedBy(requesterPublicId)
+                .recipientPublicId(dto.getRecipientPublicId())
+                .description(dto.getDescription())
+                .status(DocumentStatus.REQUESTED)
+                .uploadedBy(dto.getRecipientPublicId())
                 .build();
         return toResponse(documentRepository.save(doc));
     }
@@ -74,6 +91,11 @@ public class DocumentService {
         return documentRepository.findByPropertyId(propertyId).stream().map(this::toResponse).collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<DocumentResponse> getRequestedForUser(String recipientPublicId) {
+        return documentRepository.findByRecipientPublicId(recipientPublicId).stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
     @Transactional
     public void delete(Long id) {
         documentRepository.deleteById(id);
@@ -88,6 +110,9 @@ public class DocumentService {
                 .propertyId(d.getPropertyId())
                 .applicationId(d.getApplicationId())
                 .uploadedBy(d.getUploadedBy())
+                .requestedBy(d.getRequestedBy())
+                .recipientPublicId(d.getRecipientPublicId())
+                .description(d.getDescription())
                 .status(d.getStatus())
                 .createdAt(d.getCreatedAt())
                 .build();

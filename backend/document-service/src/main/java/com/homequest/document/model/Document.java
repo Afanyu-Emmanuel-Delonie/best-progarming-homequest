@@ -50,8 +50,17 @@ public class Document {
     @Builder.Default
     private DocumentStatus status = DocumentStatus.PENDING;
 
-    @Column(name = "uploaded_by", nullable = false)
+    @Column(name = "uploaded_by")
     private String uploadedBy;
+
+    @Column(name = "requested_by")
+    private String requestedBy;
+
+    @Column(name = "recipient_public_id")
+    private String recipientPublicId;
+
+    @Column(name = "description")
+    private String description;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

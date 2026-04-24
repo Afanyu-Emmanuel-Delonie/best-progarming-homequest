@@ -88,6 +88,10 @@ public class Property {
     @Column(name = "company_id")
     private Long companyId;
 
+    /** Primary listing photo (HTTPS URL, e.g. CDN or stock). */
+    @Column(name = "image_url", length = 2048)
+    private String imageUrl;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

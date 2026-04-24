@@ -89,7 +89,7 @@ public class PropertyController {
     }
 
     @GetMapping("/my/buying")
-    @PreAuthorize("hasAnyRole('ROLE_CLIENT', 'ROLE_OWNER')")
+    @PreAuthorize("hasAnyRole('ROLE_CUSTOMER', 'ROLE_OWNER')")
     @Operation(summary = "Get properties I am purchasing (paginated)")
     public ResponseEntity<PageResponse<PropertyResponse>> getMyPurchases(
             Authentication auth,

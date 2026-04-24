@@ -1,5 +1,8 @@
 package com.homequest.user.client.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +39,16 @@ public class ClientService {
                 .orElseThrow(() -> new IllegalArgumentException("Client profile not found")));
     }
 
+    @Transactional(readOnly = true)
+    public List<ClientResponse> getAll() {
+        return clientRepository.findAll().stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ClientResponse> getByCompany(Long companyId) {
+        return clientRepository.findByCompanyId(companyId).stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
     @Transactional
     public ClientResponse updateProfile(String userPublicId, ClientRequest request) {
         Client client = clientRepository.findByUserPublicId(userPublicId)
@@ -53,6 +66,7 @@ public class ClientService {
                 .firstName(client.getFirstName())
                 .lastName(client.getLastName())
                 .phone(client.getPhone())
+                .companyId(client.getCompanyId())
                 .build();
     }
 }

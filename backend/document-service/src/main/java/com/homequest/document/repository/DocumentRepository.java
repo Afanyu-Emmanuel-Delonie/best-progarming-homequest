@@ -8,4 +8,6 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
     List<Document> findByUploadedBy(String uploadedBy);
     List<Document> findByPropertyId(Long propertyId);
     List<Document> findByApplicationId(Long applicationId);
+    List<Document> findByRecipientPublicId(String recipientPublicId);
+    List<Document> findByRequestedBy(String requestedBy);
 }

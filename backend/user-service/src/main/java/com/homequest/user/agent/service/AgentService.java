@@ -1,16 +1,22 @@
 package com.homequest.user.agent.service;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.homequest.property.repository.PropertyRepository;
+import com.homequest.user.agent.dto.AgentCardResponse;
 import com.homequest.user.agent.dto.AgentRequest;
 import com.homequest.user.agent.dto.AgentResponse;
 import com.homequest.user.agent.model.Agent;
 import com.homequest.user.agent.model.AgentStatus;
 import com.homequest.user.agent.repository.AgentRepository;
+import com.homequest.user.company.model.Company;
+import com.homequest.user.company.repository.CompanyRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,6 +25,8 @@ import lombok.RequiredArgsConstructor;
 public class AgentService {
 
     private final AgentRepository agentRepository;
+    private final PropertyRepository propertyRepository;
+    private final CompanyRepository companyRepository;
 
     @Transactional
     public AgentResponse createProfile(String userPublicId, AgentRequest request) {
@@ -54,6 +62,42 @@ public class AgentService {
     public List<AgentResponse> getByCompany(Long companyId) {
         return agentRepository.findByCompanyId(companyId).stream()
                 .map(this::toResponse).collect(Collectors.toList());
+    }
+
+    /** Active agents ranked by listing count — public landing page. */
+    @Transactional(readOnly = true)
+    public List<AgentCardResponse> getTopPublicAgents(int limit) {
+        int cap = Math.min(Math.max(limit, 1), 24);
+        Map<String, String> defaultSocial = Map.of("twitter", "#", "linkedin", "#", "instagram", "#");
+        return agentRepository.findByStatus(AgentStatus.ACTIVE).stream()
+                .map(a -> {
+                    int listings = (int) propertyRepository.countByListingAgentPublicId(a.getUserPublicId());
+                    String companyName = companyRepository.findById(a.getCompanyId())
+                            .map(Company::getName)
+                            .orElse("HomeQuest Realty");
+                    double rating = 4.5 + (a.getId() % 6) * 0.08;
+                    rating = Math.round(rating * 10) / 10.0;
+                    String bio = String.format(
+                            "%s %s is a verified HomeQuest agent helping buyers and sellers across Rwanda.",
+                            a.getFirstName(), a.getLastName());
+                    return AgentCardResponse.builder()
+                            .id(a.getId())
+                            .firstName(a.getFirstName())
+                            .lastName(a.getLastName())
+                            .phone(a.getPhone())
+                            .licenseNumber(a.getLicenseNumber())
+                            .profileImage(a.getProfileImage())
+                            .companyName(companyName)
+                            .listings(listings)
+                            .rating(rating)
+                            .bio(bio)
+                            .location("Rwanda")
+                            .social(defaultSocial)
+                            .build();
+                })
+                .sorted(Comparator.comparingInt(AgentCardResponse::getListings).reversed())
+                .limit(cap)
+                .collect(Collectors.toList());
     }
 
     @Transactional

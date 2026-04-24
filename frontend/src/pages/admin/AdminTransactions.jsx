@@ -129,7 +129,7 @@ export default function AdminTransactions() {
   const { filterRef, filterOpen, setFilterOpen } = useFilterPanel()
 
   useEffect(() => {
-    transactionsApi.getByCompany(1)
+    transactionsApi.getAllForAdmin()
       .then(res => {
         const rows = Array.isArray(res) ? res : res.content ?? []
         setData(rows)

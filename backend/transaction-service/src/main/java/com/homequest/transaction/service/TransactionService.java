@@ -134,6 +134,12 @@ public class TransactionService {
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
+    /** All transactions — admin console only. */
+    @Transactional(readOnly = true)
+    public List<TransactionResponse> getAll() {
+        return transactionRepository.findAll().stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
     @Transactional(readOnly = true)
     public List<CommissionResponse> getCommissionsByAgent(String agentPublicId) {
         return commissionRepository.findByRecipientPublicId(agentPublicId)

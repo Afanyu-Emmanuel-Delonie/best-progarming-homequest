@@ -33,11 +33,23 @@ export default function PropertiesPage() {
   const [saved,    setSaved]    = useState(new Set())
   const gridRef                 = useRef(null)
 
-  useEffect(() => {
+  const loadProperties = () => {
+    setLoading(true)
     propertiesApi.getAll({ page: 0, size: 100, sortBy: "createdAt" })
       .then(res => setProperties(res.content ?? res ?? []))
       .catch(() => {})
       .finally(() => setLoading(false))
+  }
+
+  useEffect(() => { loadProperties() }, [])
+
+  useEffect(() => {
+    const onLive = (e) => {
+      const t = e.detail?.type
+      if (t === "PROPERTY_STATUS_CHANGED" || (typeof t === "string" && t.startsWith("APPLICATION"))) loadProperties()
+    }
+    window.addEventListener("homequest:live", onLive)
+    return () => window.removeEventListener("homequest:live", onLive)
   }, [])
 
   const filtered = useMemo(() => properties.filter(p => {

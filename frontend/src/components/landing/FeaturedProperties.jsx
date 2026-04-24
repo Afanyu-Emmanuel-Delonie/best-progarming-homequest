@@ -25,10 +25,21 @@ export default function FeaturedProperties() {
   const [active, setActive]         = useState("All")
   const [saved, setSaved]           = useState(new Set())
 
-  useEffect(() => {
+  const load = () => {
     propertiesApi.getAll({ page: 0, size: 12, sortBy: "createdAt" })
       .then(res => setProperties(res.content ?? res ?? []))
       .catch(() => {})
+  }
+
+  useEffect(() => { load() }, [])
+
+  useEffect(() => {
+    const onLive = (e) => {
+      const t = e.detail?.type
+      if (t === "PROPERTY_STATUS_CHANGED" || (typeof t === "string" && t.startsWith("APPLICATION"))) load()
+    }
+    window.addEventListener("homequest:live", onLive)
+    return () => window.removeEventListener("homequest:live", onLive)
   }, [])
 
   const filtered = active === "All"
