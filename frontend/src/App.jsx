@@ -61,9 +61,13 @@ function AppShell() {
         </Route>
 
         {/* Standalone */}
-        <Route path="/buying-guide"        element={<BuyingGuide />} />
-        <Route path="/booking/:id"         element={<BookingFormPage />} />
-        <Route path="/booking/:id/confirm" element={<BookingConfirmPage />} />
+        <Route path="/buying-guide" element={<BuyingGuide />} />
+
+        {/* Booking — requires login */}
+        <Route element={<PrivateRoute />}>
+          <Route path="/booking/:id"         element={<BookingFormPage />} />
+          <Route path="/booking/:id/confirm" element={<BookingConfirmPage />} />
+        </Route>
 
         {/* Auth */}
         <Route path="/login"    element={<Login />} />

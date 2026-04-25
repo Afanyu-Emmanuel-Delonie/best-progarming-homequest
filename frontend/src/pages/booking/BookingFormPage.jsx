@@ -55,7 +55,7 @@ export default function BookingFormPage() {
 
   return (
     <div style={{ paddingTop: 64, minHeight: "100vh", backgroundColor: "#FAFAFA" }}>
-      <div style={{ maxWidth: 1000, margin: "0 auto", padding: "1.5rem 1.5rem 4rem" }}>
+      <div className="booking-wrap" style={{ maxWidth: 1000, margin: "0 auto", padding: "1.5rem 1.5rem 4rem" }}>
 
         <button onClick={() => navigate(`/properties/${p.id}`)} style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: "0.875rem", fontWeight: 600, color: "var(--color-text-muted)", padding: 0, marginBottom: "1.5rem" }}>
           <ArrowLeft size={15} /> Back to property
@@ -63,7 +63,7 @@ export default function BookingFormPage() {
 
         <div style={{ display: "flex", gap: "2rem", alignItems: "flex-start" }} className="booking-body">
 
-          <div style={{ flex: 1, backgroundColor: "#fff", borderRadius: "16px", border: "1px solid var(--color-border)", padding: "2rem" }}>
+          <div className="booking-form" style={{ flex: 1, backgroundColor: "#fff", borderRadius: "16px", border: "1px solid var(--color-border)", padding: "2rem" }}>
             <p style={{ margin: "0 0 0.25rem", fontWeight: 800, fontSize: "1.25rem", color: "var(--color-text)" }}>Submit Your Application</p>
             <p style={{ margin: "0 0 2rem", fontSize: "0.875rem", color: "var(--color-text-muted)" }}>Complete the steps below to apply for this property.</p>
             <BidForm property={p} onSubmit={handleSubmit} loading={loading} />
@@ -96,8 +96,10 @@ export default function BookingFormPage() {
 
       <style>{`
         @media (max-width: 700px) {
+          .booking-wrap  { padding: 1rem 1rem 3rem !important; }
           .booking-body  { flex-direction: column !important; }
           .booking-aside { width: 100% !important; position: static !important; }
+          .booking-form  { padding: 1.25rem !important; }
         }
       `}</style>
     </div>

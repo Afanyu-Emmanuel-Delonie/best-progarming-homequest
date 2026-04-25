@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useLocation } from "react-router-dom"
 import { Eye, EyeOff, Home, Loader2, ArrowLeft } from "lucide-react"
 import { useDispatch } from "react-redux"
 import { setCredentials, decodeToken } from "../../store/slices/authSlice"
@@ -17,6 +17,7 @@ const ROLE_REDIRECT = {
 export default function Login() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
+  const location = useLocation()
   const toast    = useToast()
   const [form, setForm]       = useState({ email: "", password: "" })
   const [showPw, setShowPw]   = useState(false)
@@ -36,7 +37,8 @@ export default function Login() {
       dispatch(setCredentials({ user: data, token }))
       const role = decoded?.role ?? decoded?.roles?.[0] ?? data.role
       toast.success("Welcome back!")
-      navigate(ROLE_REDIRECT[role] ?? ROUTES.CLIENT)
+      const returnTo = location.state?.from?.pathname
+      navigate(returnTo ?? ROLE_REDIRECT[role] ?? ROUTES.CLIENT)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -87,8 +89,8 @@ export default function Login() {
       </div>
 
       {/* ── Right panel — form ── */}
-      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem", backgroundColor: "#fff", overflowY: "auto", height: "100vh" }}>
-        <div style={{ width: "100%", maxWidth: 400 }}>
+      <div className="auth-right" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem", backgroundColor: "#fff", overflowY: "auto", height: "100vh" }}>
+        <div className="auth-form" style={{ width: "100%", maxWidth: 400 }}>
 
           <Link to={ROUTES.HOME} style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", fontSize: "0.8125rem", fontWeight: 600, color: "var(--color-text-muted)", textDecoration: "none", marginBottom: "1.75rem" }}>
             <ArrowLeft size={14} /> Back to home
@@ -139,6 +141,8 @@ export default function Login() {
         @keyframes spin { to { transform: rotate(360deg) } }
         @media (max-width: 768px) {
           .auth-panel { display: none !important; }
+          .auth-right  { padding: 1.5rem 1.25rem !important; align-items: flex-start !important; }
+          .auth-form   { padding-top: 1rem !important; }
         }
       `}</style>
     </div>

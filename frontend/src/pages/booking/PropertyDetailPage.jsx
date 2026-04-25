@@ -5,7 +5,10 @@ import { fmtCurrencyFull } from "../../utils/formatters"
 import { PROPERTY_STATUS, PROPERTY_TYPE_LABELS } from "../../constants/enums"
 import { ROUTES } from "../../constants/routes"
 import { propertiesApi } from "../../api/properties.api"
+import { applicationsApi } from "../../api/applications.api"
 import { useToast } from "../../components/common/Toast"
+import { useSaved } from "../../hooks/useSaved"
+import { useSelector } from "react-redux"
 
 const FEATURES = ["Secure parking", "24/7 security", "Backup generator", "Water storage", "Fiber internet", "Tiled floors"]
 
@@ -13,10 +16,13 @@ export default function PropertyDetailPage() {
   const { id }                    = useParams()
   const navigate                  = useNavigate()
   const toast                     = useToast()
+  const { isSaved, toggle }       = useSaved()
+  const isAuthenticated           = useSelector((s) => !!s.auth.token)
   const [p, setP]                 = useState(null)
   const [loading, setLoading]     = useState(true)
   const [activeImg, setActiveImg] = useState(0)
-  const [saved, setSaved]         = useState(false)
+  const [application, setApplication] = useState(null) // existing application if any
+  const [withdrawing, setWithdrawing] = useState(false)
 
   useEffect(() => {
     window.scrollTo({ top: 0 })
@@ -25,6 +31,38 @@ export default function PropertyDetailPage() {
       .catch(() => setP(null))
       .finally(() => setLoading(false))
   }, [id])
+
+  // Check if user already applied to this property
+  useEffect(() => {
+    if (!isAuthenticated) return
+    applicationsApi.getMy()
+      .then((res) => {
+        const list = res?.content ?? res ?? []
+        const existing = list.find((a) => String(a.propertyId) === String(id) && a.status === "PENDING")
+        setApplication(existing ?? null)
+      })
+      .catch(() => {})
+  }, [id, isAuthenticated])
+
+  const handleWithdraw = async () => {
+    if (!application) return
+    setWithdrawing(true)
+    try {
+      await applicationsApi.withdraw(application.id)
+      setApplication(null)
+      toast.success("Application withdrawn.")
+    } catch (err) {
+      toast.error(err?.message || "Failed to withdraw.")
+    } finally {
+      setWithdrawing(false)
+    }
+  }
+
+  const handleSave = () => {
+    if (!isAuthenticated) { navigate(ROUTES.LOGIN); return }
+    toggle(p)
+    toast.info(isSaved(p.id) ? "Removed from saved" : "Saved to your list!")
+  }
 
   if (loading) return (
     <div style={{ paddingTop: 64, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.75rem", color: "var(--color-text-muted)" }}>
@@ -40,9 +78,10 @@ export default function PropertyDetailPage() {
     </div>
   )
 
-  const st   = PROPERTY_STATUS[p.status] ?? { bg: "#F5F5F5", color: "#737373", label: p.status }
-  // Support both single imageUrl and images array
-  const imgs = p.images?.length ? p.images : [p.imageUrl ?? "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&q=80"]
+  const st      = PROPERTY_STATUS[p.status] ?? { bg: "#F5F5F5", color: "#737373", label: p.status }
+  const imgs    = p.images?.length ? p.images : [p.imageUrl ?? "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&q=80"]
+  const saved   = isSaved(p.id)
+  const canApply = p.status === "AVAILABLE" && !application
 
   return (
     <div style={{ paddingTop: 64, minHeight: "100vh", backgroundColor: "#FAFAFA" }}>
@@ -107,22 +146,32 @@ export default function PropertyDetailPage() {
               {p.areaSqm && <span style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}><Maximize2 size={14} />{p.areaSqm} m²</span>}
             </div>
 
-            <button
-              onClick={() => navigate(ROUTES.BOOKING_FORM.replace(":id", p.id))}
-              disabled={p.status !== "AVAILABLE"}
-              style={{ width: "100%", padding: "0.8rem", borderRadius: "10px", border: "none", backgroundColor: p.status === "AVAILABLE" ? "var(--color-primary)" : "var(--color-bg-muted)", color: p.status === "AVAILABLE" ? "#fff" : "var(--color-text-muted)", fontWeight: 700, fontSize: "0.9375rem", cursor: p.status === "AVAILABLE" ? "pointer" : "not-allowed", fontFamily: "inherit" }}
-              onMouseEnter={e => { if (p.status === "AVAILABLE") e.currentTarget.style.opacity = "0.88" }}
-              onMouseLeave={e => e.currentTarget.style.opacity = "1"}
-            >
-              {p.status === "AVAILABLE" ? "Apply Now" : st.label}
-            </button>
+            {/* Apply / Withdraw button */}
+            {application ? (
+              <button
+                onClick={handleWithdraw}
+                disabled={withdrawing}
+                style={{ width: "100%", padding: "0.8rem", borderRadius: "10px", border: "1.5px solid #EF4444", backgroundColor: "#FEF2F2", color: "#DC2626", fontWeight: 700, fontSize: "0.9375rem", cursor: withdrawing ? "not-allowed" : "pointer", fontFamily: "inherit", opacity: withdrawing ? 0.7 : 1 }}
+              >
+                {withdrawing ? "Withdrawing…" : "Withdraw Application"}
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate(ROUTES.BOOKING_FORM.replace(":id", p.id))}
+                disabled={!canApply}
+                style={{ width: "100%", padding: "0.8rem", borderRadius: "10px", border: "none", backgroundColor: canApply ? "var(--color-primary)" : "var(--color-bg-muted)", color: canApply ? "#fff" : "var(--color-text-muted)", fontWeight: 700, fontSize: "0.9375rem", cursor: canApply ? "pointer" : "not-allowed", fontFamily: "inherit" }}
+              >
+                {p.status === "AVAILABLE" ? "Apply Now" : st.label}
+              </button>
+            )}
 
+            {/* Save button */}
             <button
-              onClick={() => { setSaved(v => !v); toast.info(saved ? "Removed from saved" : "Saved to your list!") }}
-              style={{ width: "100%", padding: "0.7rem", borderRadius: "10px", border: "1px solid var(--color-border)", backgroundColor: "transparent", fontWeight: 600, fontSize: "0.875rem", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.4rem", color: saved ? "var(--color-primary)" : "var(--color-text)" }}
+              onClick={handleSave}
+              style={{ width: "100%", padding: "0.7rem", borderRadius: "10px", border: `1px solid ${saved ? "var(--color-primary)" : "var(--color-border)"}`, backgroundColor: saved ? "#FFF5F0" : "transparent", fontWeight: 600, fontSize: "0.875rem", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.4rem", color: saved ? "var(--color-primary)" : "var(--color-text)", transition: "all 0.15s" }}
             >
               <Heart size={15} fill={saved ? "var(--color-primary)" : "none"} color={saved ? "var(--color-primary)" : "currentColor"} />
-              {saved ? "Saved" : "Save property"}
+              {saved ? "Saved ✓" : "Save property"}
             </button>
           </div>
         </aside>

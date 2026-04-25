@@ -1,20 +1,10 @@
-import { useState } from "react"
 import { MapPin, BedDouble, Bath, Maximize2, Heart, ArrowUpRight } from "lucide-react"
 import { fmtCurrencyFull } from "../../../utils/formatters"
 import { PROPERTY_STATUS, PROPERTY_TYPE_LABELS } from "../../../constants/enums"
-
-const INITIAL_SAVED = [
-  { id: 1,  title: "Modern Apartment in Kiyovu",   city: "Kigali",  province: "Kigali City",      price: 85000000,  type: "APARTMENT", status: "AVAILABLE",   bedrooms: 3, bathrooms: 2, areaSqm: 120,  image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&q=70",  savedAt: "2025-07-10" },
-  { id: 2,  title: "Family Villa in Nyarutarama",  city: "Kigali",  province: "Kigali City",      price: 320000000, type: "VILLA",     status: "UNDER_OFFER", bedrooms: 5, bathrooms: 4, areaSqm: 450,  image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=70",  savedAt: "2025-07-08" },
-  { id: 5,  title: "Lakeside Villa in Rubavu",     city: "Rubavu",  province: "Western Province",  price: 280000000, type: "VILLA",     status: "AVAILABLE",   bedrooms: 4, bathrooms: 3, areaSqm: 380,  image: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&q=70",  savedAt: "2025-07-05" },
-  { id: 9,  title: "Penthouse in Gisozi",          city: "Kigali",  province: "Kigali City",      price: 195000000, type: "APARTMENT", status: "AVAILABLE",   bedrooms: 3, bathrooms: 2, areaSqm: 180,  image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&q=70",  savedAt: "2025-07-01" },
-  { id: 4,  title: "Cozy House in Musanze",        city: "Musanze", province: "Northern Province", price: 45000000,  type: "HOUSE",     status: "AVAILABLE",   bedrooms: 3, bathrooms: 2, areaSqm: 160,  image: "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=600&q=70",  savedAt: "2025-06-28" },
-]
+import { useSaved } from "../../../hooks/useSaved"
 
 export default function ClientSavedPage() {
-  const [saved, setSaved] = useState(INITIAL_SAVED)
-
-  const remove = (id) => setSaved(s => s.filter(p => p.id !== id))
+  const { saved, remove } = useSaved()
 
   if (saved.length === 0) return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 360, gap: "1rem", color: "var(--color-text-muted)" }}>
@@ -36,13 +26,14 @@ export default function ClientSavedPage() {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.25rem" }}>
         {saved.map(p => {
-          const st = PROPERTY_STATUS[p.status]
+          const st = PROPERTY_STATUS[p.status] ?? { bg: "#F5F5F5", color: "#737373", label: p.status }
+          const img = p.images?.[0] ?? p.imageUrl ?? p.image ?? "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&q=70"
           return (
             <div key={p.id} style={{ backgroundColor: "var(--color-surface)", borderRadius: "14px", border: "1px solid var(--color-border)", overflow: "hidden" }}>
               <div style={{ position: "relative", height: 180 }}>
-                <img src={p.image} alt={p.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <img src={img} alt={p.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 <span style={{ position: "absolute", top: "0.75rem", left: "0.75rem", backgroundColor: st.bg, color: st.color, borderRadius: "6px", padding: "0.2rem 0.6rem", fontSize: "0.72rem", fontWeight: 700 }}>{st.label}</span>
-                <span style={{ position: "absolute", top: "0.75rem", right: "0.75rem", backgroundColor: "rgba(0,0,0,0.45)", color: "#fff", borderRadius: "6px", padding: "0.2rem 0.6rem", fontSize: "0.72rem", fontWeight: 600 }}>{PROPERTY_TYPE_LABELS[p.type]}</span>
+                <span style={{ position: "absolute", top: "0.75rem", right: "0.75rem", backgroundColor: "rgba(0,0,0,0.45)", color: "#fff", borderRadius: "6px", padding: "0.2rem 0.6rem", fontSize: "0.72rem", fontWeight: 600 }}>{PROPERTY_TYPE_LABELS[p.type] ?? p.type}</span>
                 <button
                   onClick={() => remove(p.id)}
                   title="Remove from saved"
@@ -54,17 +45,17 @@ export default function ClientSavedPage() {
               <div style={{ padding: "1rem 1.25rem" }}>
                 <p style={{ margin: "0 0 0.2rem", fontWeight: 700, fontSize: "0.9375rem", color: "var(--color-text)" }}>{p.title}</p>
                 <p style={{ margin: "0 0 0.75rem", fontSize: "0.8rem", color: "var(--color-text-muted)", display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                  <MapPin size={11} style={{ color: "var(--color-primary)" }} />{p.city}, {p.province}
+                  <MapPin size={11} style={{ color: "var(--color-primary)" }} />{p.city}
                 </p>
-                <p style={{ margin: "0 0 0.875rem", fontWeight: 800, fontSize: "1.125rem", color: "var(--color-text)", letterSpacing: "-0.02em" }}>{fmtCurrencyFull(p.price)}</p>
+                <p style={{ margin: "0 0 0.875rem", fontWeight: 800, fontSize: "1.125rem", color: "var(--color-text)", letterSpacing: "-0.02em" }}>{fmtCurrencyFull(Number(p.price))}</p>
                 <div style={{ display: "flex", gap: "1rem", fontSize: "0.78rem", color: "var(--color-text-muted)", paddingTop: "0.75rem", borderTop: "1px solid var(--color-border)", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ display: "flex", gap: "0.875rem" }}>
                     {p.bedrooms > 0 && <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}><BedDouble size={13} />{p.bedrooms}</span>}
                     <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}><Bath size={13} />{p.bathrooms}</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}><Maximize2 size={13} />{p.areaSqm}m²</span>
+                    {p.areaSqm && <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}><Maximize2 size={13} />{p.areaSqm}m²</span>}
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                    <span style={{ fontSize: "0.7rem", color: "var(--color-text-muted)" }}>Saved {p.savedAt}</span>
+                    {p.savedAt && <span style={{ fontSize: "0.7rem", color: "var(--color-text-muted)" }}>Saved {p.savedAt}</span>}
                     <a href={`/properties/${p.id}`} style={{ display: "inline-flex", alignItems: "center", gap: "0.2rem", fontSize: "0.75rem", color: "var(--color-primary)", textDecoration: "none", fontWeight: 600 }}>
                       View <ArrowUpRight size={12} />
                     </a>

@@ -64,57 +64,100 @@ export default function ClientApplicationsPage() {
         ) : rows.length === 0 ? (
           <div style={{ padding: "3rem", textAlign: "center", color: "var(--color-text-muted)", fontSize: "0.875rem" }}>No applications found.</div>
         ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8375rem" }}>
-              <thead>
-                <tr style={{ backgroundColor: "var(--color-bg-muted)", borderBottom: "1px solid var(--color-border)" }}>
-                  {["Property", "Offer", "Deposit", "Funding", "Closing Date", "Submitted", "Status", ""].map(h => (
-                    <th key={h} style={{ padding: "0.65rem 1.25rem", textAlign: "left", fontWeight: 600, fontSize: "0.72rem", color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((a, i) => {
-                  const st = APPLICATION_STATUS[a.status] ?? { label: a.status, bg: "#eee", color: "#333" }
-                  const canWithdraw = a.status === "PENDING"
-                  return (
-                    <tr key={a.id} style={{ borderBottom: i < rows.length - 1 ? "1px solid var(--color-border)" : "none" }}>
-                      <td style={TD}>
-                        <p style={{ margin: 0, fontWeight: 600, color: "var(--color-text)" }}>{a.propertyTitle ?? `Property #${a.propertyId}`}</p>
-                        {a.city && <p style={{ margin: "1px 0 0", fontSize: "0.72rem", color: "var(--color-text-muted)" }}>{a.city}</p>}
-                      </td>
-                      <td style={TD}><span style={{ fontWeight: 700, color: "var(--color-text)" }}>{fmtCurrency(a.offerAmount)}</span></td>
-                      <td style={TD}>{fmtCurrency(a.depositAmount)}</td>
-                      <td style={TD}>{FUNDING_LABELS[a.fundingSource] ?? a.fundingSource}</td>
-                      <td style={{ ...TD, whiteSpace: "nowrap" }}>{a.proposedClosingDate ?? "—"}</td>
-                      <td style={{ ...TD, whiteSpace: "nowrap" }}>{a.createdAt?.slice(0, 10) ?? "—"}</td>
-                      <td style={TD}>
-                        <span style={{ backgroundColor: st.bg, color: st.color, borderRadius: "999px", padding: "2px 10px", fontSize: "0.72rem", fontWeight: 600, whiteSpace: "nowrap" }}>{st.label}</span>
-                      </td>
-                      <td style={TD}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                          <a href={`/properties/${a.propertyId}`} style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "0.75rem", color: "var(--color-primary)", textDecoration: "none", fontWeight: 600 }}>
-                            View <ArrowUpRight size={12} />
-                          </a>
-                          {canWithdraw && (
-                            <button
-                              onClick={() => handleWithdraw(a.id)}
-                              disabled={withdrawing === a.id}
-                              style={{ fontSize: "0.72rem", fontWeight: 600, color: "#C2410C", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}
-                            >
-                              {withdrawing === a.id ? "…" : "Withdraw"}
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+          <>
+            {/* Desktop table */}
+            <div className="apps-table" style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8375rem" }}>
+                <thead>
+                  <tr style={{ backgroundColor: "var(--color-bg-muted)", borderBottom: "1px solid var(--color-border)" }}>
+                    {["Property", "Offer", "Deposit", "Funding", "Closing Date", "Submitted", "Status", ""].map(h => (
+                      <th key={h} style={{ padding: "0.65rem 1.25rem", textAlign: "left", fontWeight: 600, fontSize: "0.72rem", color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((a, i) => {
+                    const st = APPLICATION_STATUS[a.status] ?? { label: a.status, bg: "#eee", color: "#333" }
+                    const canWithdraw = a.status === "PENDING"
+                    return (
+                      <tr key={a.id} style={{ borderBottom: i < rows.length - 1 ? "1px solid var(--color-border)" : "none" }}>
+                        <td style={TD}>
+                          <p style={{ margin: 0, fontWeight: 600, color: "var(--color-text)" }}>{a.propertyTitle ?? `Property #${a.propertyId}`}</p>
+                          {a.city && <p style={{ margin: "1px 0 0", fontSize: "0.72rem", color: "var(--color-text-muted)" }}>{a.city}</p>}
+                        </td>
+                        <td style={TD}><span style={{ fontWeight: 700, color: "var(--color-text)" }}>{fmtCurrency(a.offerAmount)}</span></td>
+                        <td style={TD}>{fmtCurrency(a.depositAmount)}</td>
+                        <td style={TD}>{FUNDING_LABELS[a.fundingSource] ?? a.fundingSource}</td>
+                        <td style={{ ...TD, whiteSpace: "nowrap" }}>{a.proposedClosingDate ?? "—"}</td>
+                        <td style={{ ...TD, whiteSpace: "nowrap" }}>{a.createdAt?.slice(0, 10) ?? "—"}</td>
+                        <td style={TD}>
+                          <span style={{ backgroundColor: st.bg, color: st.color, borderRadius: "999px", padding: "2px 10px", fontSize: "0.72rem", fontWeight: 600, whiteSpace: "nowrap" }}>{st.label}</span>
+                        </td>
+                        <td style={TD}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                            <a href={`/properties/${a.propertyId}`} style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "0.75rem", color: "var(--color-primary)", textDecoration: "none", fontWeight: 600 }}>
+                              View <ArrowUpRight size={12} />
+                            </a>
+                            {canWithdraw && (
+                              <button onClick={() => handleWithdraw(a.id)} disabled={withdrawing === a.id}
+                                style={{ fontSize: "0.72rem", fontWeight: 600, color: "#C2410C", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}>
+                                {withdrawing === a.id ? "…" : "Withdraw"}
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile cards */}
+            <div className="apps-cards" style={{ display: "none", flexDirection: "column", gap: "0.75rem", padding: "0.75rem" }}>
+              {rows.map(a => {
+                const st = APPLICATION_STATUS[a.status] ?? { label: a.status, bg: "#eee", color: "#333" }
+                const canWithdraw = a.status === "PENDING"
+                return (
+                  <div key={a.id} style={{ backgroundColor: "#fff", borderRadius: "12px", border: "1px solid var(--color-border)", padding: "1rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
+                      <div>
+                        <p style={{ margin: 0, fontWeight: 700, fontSize: "0.9rem", color: "var(--color-text)" }}>{a.propertyTitle ?? `Property #${a.propertyId}`}</p>
+                        {a.city && <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "var(--color-text-muted)" }}>{a.city}</p>}
+                      </div>
+                      <span style={{ backgroundColor: st.bg, color: st.color, borderRadius: "999px", padding: "2px 10px", fontSize: "0.72rem", fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>{st.label}</span>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", fontSize: "0.8rem", marginBottom: "0.75rem" }}>
+                      <div><p style={{ margin: 0, fontSize: "0.7rem", color: "var(--color-text-muted)", fontWeight: 600 }}>OFFER</p><p style={{ margin: 0, fontWeight: 700, color: "var(--color-text)" }}>{fmtCurrency(a.offerAmount)}</p></div>
+                      <div><p style={{ margin: 0, fontSize: "0.7rem", color: "var(--color-text-muted)", fontWeight: 600 }}>DEPOSIT</p><p style={{ margin: 0, color: "var(--color-text)" }}>{fmtCurrency(a.depositAmount)}</p></div>
+                      <div><p style={{ margin: 0, fontSize: "0.7rem", color: "var(--color-text-muted)", fontWeight: 600 }}>FUNDING</p><p style={{ margin: 0, color: "var(--color-text)" }}>{FUNDING_LABELS[a.fundingSource] ?? a.fundingSource}</p></div>
+                      <div><p style={{ margin: 0, fontSize: "0.7rem", color: "var(--color-text-muted)", fontWeight: 600 }}>CLOSING</p><p style={{ margin: 0, color: "var(--color-text)" }}>{a.proposedClosingDate ?? "—"}</p></div>
+                    </div>
+                    <div style={{ display: "flex", gap: "0.75rem", paddingTop: "0.75rem", borderTop: "1px solid var(--color-border)" }}>
+                      <a href={`/properties/${a.propertyId}`} style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "0.8rem", color: "var(--color-primary)", textDecoration: "none", fontWeight: 600 }}>
+                        View property <ArrowUpRight size={12} />
+                      </a>
+                      {canWithdraw && (
+                        <button onClick={() => handleWithdraw(a.id)} disabled={withdrawing === a.id}
+                          style={{ fontSize: "0.8rem", fontWeight: 600, color: "#C2410C", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}>
+                          {withdrawing === a.id ? "Withdrawing…" : "Withdraw"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </>
         )}
       </div>
+
+      <style>{`
+        @media (max-width: 640px) {
+          .apps-table { display: none !important; }
+          .apps-cards { display: flex !important; }
+        }
+      `}</style>
     </div>
   )
 }

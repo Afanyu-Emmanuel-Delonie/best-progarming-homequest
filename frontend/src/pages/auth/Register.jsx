@@ -126,8 +126,8 @@ export default function Register() {
       </div>
 
       {/* ── Right panel — form ── */}
-      <div style={{ flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "2.5rem 2rem", backgroundColor: "#fff", overflowY: "auto", height: "100vh" }}>
-        <div style={{ width: "100%", maxWidth: 420, paddingTop: "2rem", paddingBottom: "2rem" }}>
+      <div className="auth-right" style={{ flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "2.5rem 2rem", backgroundColor: "#fff", overflowY: "auto", height: "100vh" }}>
+        <div className="auth-form" style={{ width: "100%", maxWidth: 420, paddingTop: "2rem", paddingBottom: "2rem" }}>
 
           <Link to={ROUTES.HOME} style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", fontSize: "0.8125rem", fontWeight: 600, color: "var(--color-text-muted)", textDecoration: "none", marginBottom: "1.75rem" }}>
             <ArrowLeft size={14} /> Back to home
@@ -223,6 +223,8 @@ export default function Register() {
         @keyframes spin { to { transform: rotate(360deg) } }
         @media (max-width: 768px) {
           .auth-panel { display: none !important; }
+          .auth-right  { padding: 1.5rem 1.25rem !important; align-items: flex-start !important; }
+          .auth-form   { padding-top: 1rem !important; }
         }
       `}</style>
     </div>
