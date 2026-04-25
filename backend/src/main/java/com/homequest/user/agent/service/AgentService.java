@@ -67,7 +67,7 @@ public class AgentService {
     /** Active agents ranked by listing count — public landing page. */
     @Transactional(readOnly = true)
     public List<AgentCardResponse> getTopPublicAgents(int limit) {
-        int cap = Math.min(Math.max(limit, 1), 24);
+        int cap = limit == Integer.MAX_VALUE ? Integer.MAX_VALUE : Math.min(Math.max(limit, 1), 24);
         Map<String, String> defaultSocial = Map.of("twitter", "#", "linkedin", "#", "instagram", "#");
         return agentRepository.findByStatus(AgentStatus.ACTIVE).stream()
                 .map(a -> {
@@ -82,6 +82,7 @@ public class AgentService {
                             a.getFirstName(), a.getLastName());
                     return AgentCardResponse.builder()
                             .id(a.getId())
+                            .userPublicId(a.getUserPublicId())
                             .firstName(a.getFirstName())
                             .lastName(a.getLastName())
                             .phone(a.getPhone())

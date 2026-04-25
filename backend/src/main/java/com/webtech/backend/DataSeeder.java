@@ -80,6 +80,14 @@ public class DataSeeder implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
+        // Patch any PENDING agents to ACTIVE (fixes legacy data)
+        List<Agent> pendingAgents = agentRepository.findByStatus(AgentStatus.PENDING);
+        if (!pendingAgents.isEmpty()) {
+            pendingAgents.forEach(a -> a.setStatus(AgentStatus.ACTIVE));
+            agentRepository.saveAll(pendingAgents);
+            log.info("Patched {} PENDING agent(s) to ACTIVE.", pendingAgents.size());
+        }
+
         if (userRepository.count() > 0) {
             log.info("Database already seeded — skipping.");
             return;

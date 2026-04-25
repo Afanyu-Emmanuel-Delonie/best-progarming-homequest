@@ -52,7 +52,7 @@ public class Agent {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
-    private AgentStatus status = AgentStatus.PENDING;
+    private AgentStatus status = AgentStatus.ACTIVE;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

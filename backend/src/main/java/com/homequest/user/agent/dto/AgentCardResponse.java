@@ -10,6 +10,7 @@ import lombok.Data;
 @Builder
 public class AgentCardResponse {
     private Long id;
+    private String userPublicId;
     private String firstName;
     private String lastName;
     private String phone;

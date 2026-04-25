@@ -33,8 +33,14 @@ export default function BidForm({ property, onSubmit, loading }) {
 
   useEffect(() => {
     agentsApi.getAllActive()
-      .then(setAgents)
-      .catch(() => setAgents([]))
+      .then(data => {
+        setAgents(data)
+        if (!data || data.length === 0) setForm(f => ({ ...f, assignedAgentPublicId: "homequest" }))
+      })
+      .catch(() => {
+        setAgents([])
+        setForm(f => ({ ...f, assignedAgentPublicId: "homequest" }))
+      })
       .finally(() => setAgentsLoading(false))
   }, [])
 
@@ -48,11 +54,13 @@ export default function BidForm({ property, onSubmit, loading }) {
   const handleSubmit = () => {
     onSubmit({
       ...form,
+      assignedAgentPublicId: form.assignedAgentPublicId === "homequest" ? null : form.assignedAgentPublicId,
       offerAmount: Number(form.offerAmount),
       depositAmount: Number(form.depositAmount),
     })
   }
 
+  const isHomeQuest = form.assignedAgentPublicId === "homequest"
   const selectedAgent = agents.find(a => a.userPublicId === form.assignedAgentPublicId)
 
   return (
@@ -81,7 +89,7 @@ export default function BidForm({ property, onSubmit, loading }) {
               <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} /> Loading agents…
             </div>
           ) : agents.length === 0 ? (
-            <p style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>No agents available at the moment.</p>
+            <HomeQuestFallback selected={form.assignedAgentPublicId === "homequest"} onSelect={() => setForm(f => ({ ...f, assignedAgentPublicId: "homequest" }))} />
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
               {agents.map(agent => {
@@ -118,6 +126,7 @@ export default function BidForm({ property, onSubmit, loading }) {
                   </button>
                 )
               })}
+              <HomeQuestFallback selected={isHomeQuest} onSelect={() => setForm(f => ({ ...f, assignedAgentPublicId: "homequest" }))} />
             </div>
           )}
         </div>
@@ -165,8 +174,8 @@ export default function BidForm({ property, onSubmit, loading }) {
       {step === 3 && (
         <div style={styles.review}>
           <Section title="Assigned Agent">
-            <Row label="Agent" value={selectedAgent ? `${selectedAgent.firstName} ${selectedAgent.lastName}` : "—"} />
-            {selectedAgent && <Row label="License" value={selectedAgent.licenseNumber} />}
+            <Row label="Agent" value={isHomeQuest ? "HomeQuest (assigned by team)" : selectedAgent ? `${selectedAgent.firstName} ${selectedAgent.lastName}` : "—"} />
+            {selectedAgent && !isHomeQuest && <Row label="License" value={selectedAgent.licenseNumber} />}
           </Section>
           <Section title="Personal Info">
             <Row label="Full Name"   value={form.buyerFullName} />
@@ -211,6 +220,31 @@ export default function BidForm({ property, onSubmit, loading }) {
         }
       `}</style>
     </div>
+  )
+}
+
+function HomeQuestFallback({ selected, onSelect }) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      style={{
+        display: "flex", alignItems: "center", gap: "1rem",
+        padding: "0.875rem 1rem", borderRadius: "12px", cursor: "pointer",
+        border: `2px solid ${selected ? "var(--color-primary)" : "var(--color-border)"}`,
+        backgroundColor: selected ? "#FFF5F0" : "#F9F9F9",
+        textAlign: "left", fontFamily: "inherit", transition: "all 0.15s", width: "100%",
+      }}
+    >
+      <div style={{ width: 44, height: 44, borderRadius: "50%", backgroundColor: "var(--color-primary)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <User size={20} color="#fff" />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ margin: 0, fontWeight: 700, fontSize: "0.9rem", color: selected ? "var(--color-primary)" : "var(--color-text)" }}>HomeQuest Team</p>
+        <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "var(--color-text-muted)" }}>An agent will be assigned by our team</p>
+      </div>
+      {selected && <Check size={18} color="var(--color-primary)" style={{ flexShrink: 0 }} />}
+    </button>
   )
 }
 
