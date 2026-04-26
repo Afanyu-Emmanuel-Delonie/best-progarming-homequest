@@ -40,7 +40,7 @@ export default function AgentLayout() {
       </div>
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <Header fullName="Sarah Johnson" role="ROLE_AGENT" onToggleSidebar={toggle} profileHref="/agent/profile" settingsHref="/agent/profile" />
+        <Header onToggleSidebar={toggle} profileHref="/agent/profile" settingsHref="/agent/profile" />
         <main style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "1.5rem", minWidth: 0 }}>
           <Outlet />
         </main>

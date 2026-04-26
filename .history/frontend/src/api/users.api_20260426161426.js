@@ -38,13 +38,15 @@ export const clientsApi = {
       .then((r) => r.data),
 };
 
-// Resolve a publicId to "First Last" — tries agent, then owner, then client
+// Resolve a publicId to "First Last" — tries agent, owner, client in order
 export async function resolvePublicId(pid) {
   if (!pid) return "—";
-  const profile =
-    (await usersApi.getAgentByPublicId(pid)) ??
-    (await usersApi.getOwnerByPublicId(pid)) ??
-    (await usersApi.getClientByPublicId(pid));
+  const [agent, owner, client_] = await Promise.all([
+    usersApi.getAgentByPublicId(pid),
+    usersApi.getOwnerByPublicId(pid),
+    usersApi.getClientByPublicId(pid),
+  ]);
+  const profile = agent ?? owner ?? client_;
   if (!profile) return pid.slice(0, 8) + "…";
   return `${profile.firstName} ${profile.lastName}`;
 }

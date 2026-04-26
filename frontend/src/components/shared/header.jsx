@@ -1,30 +1,54 @@
 import { useState, useRef, useEffect } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { Menu, Bell, ChevronDown, LogOut, User, Settings, Check, Home } from "lucide-react"
-import { useDispatch } from "react-redux"
+import { useDispatch, useSelector } from "react-redux"
 import { logout } from "../../store/slices/authSlice"
+import { markAllRead } from "../../store/slices/notificationSlice"
 import { PAGE_TITLES } from "../../constants/nav"
+import client from "../../api/client"
 
-export default function Header({ fullName, role, onToggleSidebar, profileHref = "/admin/profile", settingsHref = "/admin/settings" }) {
+function profileEndpoint(role) {
+  if (!role) return null
+  if (role.includes("AGENT"))   return "/agents/me"
+  if (role.includes("OWNER"))   return "/owners/me"
+  if (role.includes("CUSTOMER")) return "/clients/me"
+  return null // ADMIN has no profile endpoint — use auth user directly
+}
+
+export default function Header({ onToggleSidebar, profileHref = "/admin/profile", settingsHref = "/admin/settings" }) {
   const { pathname } = useLocation()
   const navigate     = useNavigate()
   const dispatch     = useDispatch()
   const title        = PAGE_TITLES[pathname] ?? "Dashboard"
-  const signOut      = () => { dispatch(logout()); navigate("/login") }
 
-  const [notifOpen, setNotifOpen]     = useState(false)
+  const { user, role } = useSelector((s) => s.auth)
+  const { events, unread } = useSelector((s) => s.notifications)
+
+  const [profile, setProfile] = useState(null)
+
+  useEffect(() => {
+    const endpoint = profileEndpoint(role)
+    if (!endpoint) return
+    client.get(endpoint)
+      .then(r => setProfile(r.data))
+      .catch(() => {}) // silently fall back to auth user
+  }, [role])
+
+  const fullName = profile
+    ? `${profile.firstName} ${profile.lastName}`
+    : (user?.username ?? "")
+
+  const signOut = () => { dispatch(logout()); navigate("/login") }
+
+  const [notifOpen,   setNotifOpen]   = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
-  const [notifications, setNotifications] = useState([
-    { id: "1", title: "New application submitted", message: "A buyer placed a bid on 12 Oak St.", time: "2m ago", read: false },
-    { id: "2", title: "Transaction completed",      message: "Sale of 45 Maple Ave finalised.",  time: "1h ago", read: false },
-    { id: "3", title: "New agent registered",       message: "John Doe joined as an agent.",     time: "3h ago", read: true  },
-  ])
 
   const notifRef   = useRef(null)
   const profileRef = useRef(null)
 
-  const unread   = notifications.filter((n) => !n.read).length
-  const initials = fullName ? fullName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase() : "?"
+  const initials = fullName
+    ? fullName.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()
+    : "?"
 
   useEffect(() => {
     const handler = (e) => {
@@ -35,8 +59,16 @@ export default function Header({ fullName, role, onToggleSidebar, profileHref = 
     return () => document.removeEventListener("mousedown", handler)
   }, [])
 
-  const markAllRead = () => setNotifications((p) => p.map((n) => ({ ...n, read: true })))
-  const markRead    = (id) => setNotifications((p) => p.map((n) => n.id === id ? { ...n, read: true } : n))
+  const handleMarkAllRead = () => dispatch(markAllRead())
+
+  const fmtTime = (ts) => {
+    if (!ts) return ""
+    const diff = Math.floor((Date.now() - new Date(ts).getTime()) / 1000)
+    if (diff < 60)   return `${diff}s ago`
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
+    return `${Math.floor(diff / 86400)}d ago`
+  }
 
   return (
     <header style={{
@@ -72,7 +104,7 @@ export default function Header({ fullName, role, onToggleSidebar, profileHref = 
         {/* Notifications */}
         <div ref={notifRef} style={{ position: "relative" }}>
           <button
-            onClick={() => { setNotifOpen((v) => !v); setProfileOpen(false) }}
+            onClick={() => { setNotifOpen(v => !v); setProfileOpen(false) }}
             style={{ ...iconBtnStyle, position: "relative" }}
             aria-label="Notifications"
           >
@@ -93,24 +125,25 @@ export default function Header({ fullName, role, onToggleSidebar, profileHref = 
                   Notifications {unread > 0 && <span style={badgeStyle}>{unread}</span>}
                 </span>
                 {unread > 0 && (
-                  <button onClick={markAllRead} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "12px", color: "var(--color-primary)", display: "flex", alignItems: "center", gap: "4px", fontWeight: 500 }}>
+                  <button onClick={handleMarkAllRead} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "12px", color: "var(--color-primary)", display: "flex", alignItems: "center", gap: "4px", fontWeight: 500 }}>
                     <Check size={12} /> Mark all read
                   </button>
                 )}
               </div>
               <div style={{ maxHeight: "260px", overflowY: "auto" }}>
-                {notifications.map((n) => (
+                {events.length === 0 ? (
+                  <p style={{ margin: 0, padding: "1rem", fontSize: "0.8125rem", color: "var(--color-text-muted)", textAlign: "center" }}>No notifications</p>
+                ) : events.map((n, i) => (
                   <div
-                    key={n.id}
-                    onClick={() => markRead(n.id)}
-                    style={{ display: "flex", gap: "0.75rem", padding: "0.65rem 1rem", cursor: "pointer", opacity: n.read ? 0.55 : 1, borderBottom: "1px solid var(--color-border)" }}
+                    key={i}
+                    style={{ display: "flex", gap: "0.75rem", padding: "0.65rem 1rem", borderBottom: "1px solid var(--color-border)" }}
                   >
-                    <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: n.read ? "transparent" : "var(--color-primary)", flexShrink: 0, marginTop: "5px" }} />
+                    <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--color-primary)", flexShrink: 0, marginTop: "5px" }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: 0, fontSize: "0.8125rem", fontWeight: n.read ? 400 : 600, color: "var(--color-text)" }}>{n.title}</p>
+                      <p style={{ margin: 0, fontSize: "0.8125rem", fontWeight: 600, color: "var(--color-text)" }}>{n.title}</p>
                       <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "var(--color-text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{n.message}</p>
                     </div>
-                    <span style={{ fontSize: "0.6875rem", color: "var(--color-text-subtle)", flexShrink: 0 }}>{n.time}</span>
+                    <span style={{ fontSize: "0.6875rem", color: "var(--color-text-subtle)", flexShrink: 0 }}>{fmtTime(n.timestamp)}</span>
                   </div>
                 ))}
               </div>
@@ -124,7 +157,7 @@ export default function Header({ fullName, role, onToggleSidebar, profileHref = 
         {/* Profile */}
         <div ref={profileRef} style={{ position: "relative" }}>
           <button
-            onClick={() => { setProfileOpen((v) => !v); setNotifOpen(false) }}
+            onClick={() => { setProfileOpen(v => !v); setNotifOpen(false) }}
             style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "none", border: "none", cursor: "pointer", padding: "0.35rem 0.5rem", borderRadius: "8px" }}
             aria-label="Profile menu"
           >
@@ -138,7 +171,7 @@ export default function Header({ fullName, role, onToggleSidebar, profileHref = 
             </div>
             <div className="header-profile-text" style={{ textAlign: "left", lineHeight: 1.25 }}>
               <p style={{ margin: 0, fontSize: "0.8125rem", fontWeight: 600, color: "var(--color-text)", whiteSpace: "nowrap" }}>{fullName}</p>
-              <p style={{ margin: 0, fontSize: "0.6875rem", color: "var(--color-text-muted)", textTransform: "capitalize" }}>{role?.replace("_", " ").toLowerCase()}</p>
+              <p style={{ margin: 0, fontSize: "0.6875rem", color: "var(--color-text-muted)", textTransform: "capitalize" }}>{role?.replace("ROLE_", "").replace("_", " ").toLowerCase()}</p>
             </div>
             <ChevronDown className="header-profile-text" size={14} style={{ color: "var(--color-text-muted)", transform: profileOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
           </button>

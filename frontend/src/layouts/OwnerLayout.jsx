@@ -37,7 +37,7 @@ export default function OwnerLayout() {
         <Sidebar collapsed={!isMobile && collapsed} nav={OWNER_NAV} />
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <Header fullName="Owner User" role="ROLE_OWNER" onToggleSidebar={toggle} profileHref="/owner" settingsHref="/owner" />
+        <Header onToggleSidebar={toggle} profileHref="/owner" settingsHref="/owner" />
         <main style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "1.5rem", minWidth: 0 }}>
           <Outlet />
         </main>

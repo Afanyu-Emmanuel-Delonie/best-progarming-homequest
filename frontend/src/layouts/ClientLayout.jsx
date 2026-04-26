@@ -37,7 +37,7 @@ export default function ClientLayout() {
         <Sidebar collapsed={!isMobile && collapsed} nav={CLIENT_NAV} />
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <Header fullName="Client User" role="ROLE_CLIENT" onToggleSidebar={toggle} profileHref="/client" settingsHref="/client" />
+        <Header onToggleSidebar={toggle} profileHref="/client" settingsHref="/client" />
         <main style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "1.5rem", minWidth: 0 }}>
           <Outlet />
         </main>

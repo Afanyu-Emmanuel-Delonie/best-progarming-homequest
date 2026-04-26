@@ -17,16 +17,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
-        String msg = ex.getMessage();
-        HttpStatus status;
-        if (msg != null && msg.startsWith("Invalid")) {
-            status = HttpStatus.UNAUTHORIZED;
-        } else if (msg != null && msg.toLowerCase().contains("not found")) {
-            status = HttpStatus.NOT_FOUND;
-        } else {
-            status = HttpStatus.BAD_REQUEST;
-        }
-        return ResponseEntity.status(status).body(Map.of("message", msg));
+        HttpStatus status = ex.getMessage() != null && ex.getMessage().startsWith("Invalid")
+                ? HttpStatus.UNAUTHORIZED
+                : HttpStatus.BAD_REQUEST;
+        return ResponseEntity.status(status).body(Map.of("message", ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -39,7 +39,7 @@ export default function AdminLayout() {
       </div>
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <Header fullName="Admin User" role="ADMIN" onToggleSidebar={toggle} />
+        <Header onToggleSidebar={toggle} />
         <main style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "1.5rem", minWidth: 0 }}>
           <Outlet />
         </main>
