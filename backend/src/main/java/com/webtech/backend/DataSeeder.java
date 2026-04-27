@@ -405,14 +405,7 @@ public class DataSeeder implements ApplicationRunner {
 
         log.info("Transaction and commissions seeded.");
         log.info("✅ Database seeding complete.");
-        log.info("──────────────────────────────────────────");
-        log.info("Test credentials:");
-        log.info("  Admin       : admin@homequest.rw  / Admin@1234");
-        log.info("  Agent Alice : alice@homequest.rw  / Agent@1234");
-        log.info("  Agent Bob   : bob@homequest.rw    / Agent@1234");
-        log.info("  Owner       : owner@homequest.rw  / Owner@1234");
-        log.info("  Customer    : client@homequest.rw / Client@1234");
-        log.info("──────────────────────────────────────────");
+        log.info("Test accounts seeded — check application.properties or README for credentials.");
     }
 
     private User saveUser(String firstName, String lastName, String email, String password, Role role) {

@@ -16,6 +16,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -50,8 +51,8 @@ public class JwtFilter extends OncePerRequestFilter {
                 filterChain.doFilter(request, response);
                 return;
             }
-        } catch (Exception ex) {
-            // fall through to unauthorized response
+        } catch (JwtException | IllegalArgumentException ex) {
+            // invalid token — fall through to 401
         }
 
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
