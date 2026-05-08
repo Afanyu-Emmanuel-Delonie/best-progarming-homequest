@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { Eye, EyeOff, Home, Loader2, ArrowLeft } from "lucide-react"
 import { useDispatch } from "react-redux"
@@ -23,8 +23,18 @@ export default function Login() {
   const [showPw, setShowPw]   = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState("")
+  const [redirectTo, setRedirectTo] = useState(null)
 
   const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setError("") }
+
+  useEffect(() => {
+    if (!redirectTo) return
+    // Wait for Redux to commit the auth state before entering guarded routes.
+    const id = window.requestAnimationFrame(() => {
+      navigate(redirectTo, { replace: true })
+    })
+    return () => window.cancelAnimationFrame(id)
+  }, [redirectTo, navigate])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -38,7 +48,7 @@ export default function Login() {
       const role = decoded?.role ?? decoded?.roles?.[0] ?? data.role
       toast.success("Welcome back!")
       const returnTo = location.state?.from?.pathname
-      navigate(returnTo ?? ROLE_REDIRECT[role] ?? ROUTES.CLIENT)
+      setRedirectTo(returnTo ?? ROLE_REDIRECT[role] ?? ROUTES.CLIENT)
     } catch (err) {
       setError(err.message)
     } finally {

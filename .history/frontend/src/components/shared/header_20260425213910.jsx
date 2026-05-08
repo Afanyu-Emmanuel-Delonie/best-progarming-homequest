@@ -1,28 +1,25 @@
 import { useState, useRef, useEffect } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
-import { Menu, Bell, ChevronDown, LogOut, User, Settings, Check } from "lucide-react"
+import { Menu, Bell, ChevronDown, LogOut, User, Settings, Check, Home } from "lucide-react"
 import { useDispatch, useSelector } from "react-redux"
 import { logout } from "../../store/slices/authSlice"
 import { markAllRead } from "../../store/slices/notificationSlice"
-import { PAGE_TITLES, ADMIN_NAV, AGENT_NAV, CLIENT_NAV, OWNER_NAV } from "../../constants/nav"
+import { PAGE_TITLES } from "../../constants/nav"
 import client from "../../api/client"
-
-const ALL_NAV = [...ADMIN_NAV, ...AGENT_NAV, ...CLIENT_NAV, ...OWNER_NAV]
 
 function profileEndpoint(role) {
   if (!role) return null
-  if (role.includes("AGENT"))    return "/agents/me"
-  if (role.includes("OWNER"))    return "/owners/me"
+  if (role.includes("AGENT"))   return "/agents/me"
+  if (role.includes("OWNER"))   return "/owners/me"
   if (role.includes("CUSTOMER")) return "/clients/me"
-  return null
+  return null // ADMIN has no profile endpoint — use auth user directly
 }
 
 export default function Header({ onToggleSidebar, profileHref = "/admin/profile", settingsHref = "/admin/settings" }) {
   const { pathname } = useLocation()
   const navigate     = useNavigate()
   const dispatch     = useDispatch()
-  const title   = PAGE_TITLES[pathname] ?? "Dashboard"
-  const navIcon  = ALL_NAV.find(n => n.href === pathname)?.icon ?? null
+  const title        = PAGE_TITLES[pathname] ?? "Dashboard"
 
   const { user, role } = useSelector((s) => s.auth)
   const { events, unread } = useSelector((s) => s.notifications)
@@ -94,11 +91,9 @@ export default function Header({ onToggleSidebar, profileHref = "/admin/profile"
           <Menu size={20} />
         </button>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          {navIcon && (
-            <div style={{ width: 28, height: 28, borderRadius: "7px", backgroundColor: "var(--color-bg-muted)", border: "1px solid var(--color-border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "var(--color-primary)" }}>
-              {navIcon}
-            </div>
-          )}
+          <div style={{ width: 28, height: 28, borderRadius: "7px", backgroundColor: "var(--color-primary)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Home size={14} color="#fff" />
+          </div>
           <span style={{ fontWeight: 700, fontSize: "0.9375rem", color: "var(--color-text)" }}>{title}</span>
         </div>
       </div>

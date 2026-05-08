@@ -71,6 +71,9 @@ public class PropertyApplication {
     @Column(name = "assigned_agent_public_id")
     private String assignedAgentPublicId;
 
+    @Column(name = "transaction_id")
+    private Long transactionId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default

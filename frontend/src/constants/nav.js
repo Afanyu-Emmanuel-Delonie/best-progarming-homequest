@@ -6,7 +6,6 @@ import {
   ArrowLeftRight,
   ClipboardList,
   Settings,
-  Home,
   DollarSign,
   UserCircle,
   Search,
@@ -46,7 +45,7 @@ export const OWNER_NAV = [
 
 export const AGENT_NAV = [
   { label: "Dashboard",    href: "/agent",                icon: icon(LayoutDashboard), end: true },
-  { label: "My Listings",  href: "/agent/listings",       icon: icon(Home),            end: true },
+  { label: "My Listings",  href: "/agent/listings",       icon: icon(Building2),       end: true },
   { label: "My Clients",   href: "/agent/clients",        icon: icon(UserCheck) },
   { label: "Applications", href: "/agent/applications",   icon: icon(ClipboardList) },
   { label: "Transactions", href: "/agent/transactions",   icon: icon(ArrowLeftRight) },

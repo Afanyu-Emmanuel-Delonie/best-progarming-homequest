@@ -26,6 +26,7 @@ public class PropertyApplicationResponse {
     private LocalDate offerExpirationDate;
     private String specialConditions;
     private String assignedAgentPublicId;
+    private Long transactionId;
     private ApplicationStatus status;
     private String reviewedBy;
     private LocalDateTime createdAt;

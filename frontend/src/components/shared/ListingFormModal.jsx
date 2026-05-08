@@ -1,17 +1,12 @@
-import { useState } from "react"
-import { X, Home, Loader2 } from "lucide-react"
+import { useState, useEffect } from "react"
+import { X, Home, Loader2, Search } from "lucide-react"
 import { PROPERTY_TYPE_LABELS, PROPERTY_STATUS } from "../../constants/enums"
 import { useLocationPicker } from "../../hooks/useLocation"
 import LocationFields from "./LocationFields"
 import ImageUpload from "./ImageUpload"
 import { propertiesApi } from "../../api/properties.api"
+import { ownerApi } from "../../api/owner.api"
 import { toast } from "react-toastify"
-
-const EMPTY = {
-  title: "", address: "",
-  price: "", type: "APARTMENT", status: "AVAILABLE",
-  bedrooms: "", bathrooms: "", areaSqm: "", description: "",
-}
 
 const inputStyle = {
   padding: "0.55rem 0.85rem", borderRadius: "8px", border: "1px solid var(--color-border)",
@@ -29,10 +24,92 @@ function Field({ label, error, children }) {
   )
 }
 
+// ── Owner Picker ───────────────────────────────────────────────────────────
+function OwnerPicker({ onChange }) {
+  const [mode, setMode]         = useState("system")
+  const [owners, setOwners]     = useState([])
+  const [search, setSearch]     = useState("")
+  const [selected, setSelected] = useState(null)
+  const [customId, setCustomId] = useState("")
+
+  useEffect(() => { ownerApi.getAll().then(setOwners).catch(() => {}) }, [])
+
+  const filtered = owners.filter(o =>
+    search.trim() === "" ||
+    `${o.firstName} ${o.lastName}`.toLowerCase().includes(search.toLowerCase()) ||
+    o.phone?.includes(search)
+  )
+
+  const select = (owner) => { setSelected(owner); onChange(owner.userPublicId); setSearch("") }
+  const clear  = ()       => { setSelected(null);  onChange("") }
+  const switchMode = (m)  => { setMode(m); setSelected(null); setCustomId(""); onChange("") }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+        {[{ key: "system", label: "Select from system" }, { key: "custom", label: "Enter manually" }].map(opt => (
+          <button key={opt.key} type="button" onClick={() => switchMode(opt.key)} style={{
+            padding: "0.45rem", borderRadius: "7px", cursor: "pointer", fontFamily: "inherit",
+            fontWeight: 600, fontSize: "0.78rem", border: "1.5px solid",
+            borderColor: mode === opt.key ? "var(--color-primary)" : "var(--color-border)",
+            backgroundColor: mode === opt.key ? "#FFF5F0" : "var(--color-bg-muted)",
+            color: mode === opt.key ? "var(--color-primary)" : "var(--color-text-muted)",
+          }}>{opt.label}</button>
+        ))}
+      </div>
+
+      {mode === "system" ? (
+        selected ? (
+          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", padding: "0.55rem 0.875rem", borderRadius: "8px", border: "1.5px solid var(--color-primary)", backgroundColor: "#FFF5F0" }}>
+            <div style={{ width: 28, height: 28, borderRadius: "50%", backgroundColor: "var(--color-primary)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.68rem", fontWeight: 700, flexShrink: 0 }}>
+              {selected.firstName[0]}{selected.lastName[0]}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ margin: 0, fontWeight: 600, fontSize: "0.8375rem", color: "var(--color-text)" }}>{selected.firstName} {selected.lastName}</p>
+              {selected.phone && <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--color-text-muted)" }}>{selected.phone}</p>}
+            </div>
+            <button type="button" onClick={clear} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text-muted)", display: "flex" }}>
+              <X size={14} />
+            </button>
+          </div>
+        ) : (
+          <div style={{ position: "relative" }}>
+            <Search size={13} style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)", pointerEvents: "none" }} />
+            <input style={{ ...inputStyle, paddingLeft: "2.1rem" }} placeholder="Search by name or phone…"
+              value={search} onChange={e => setSearch(e.target.value)} />
+            {search.trim() && (
+              <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, backgroundColor: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "8px", boxShadow: "0 8px 24px #0000001a", zIndex: 20, maxHeight: 180, overflowY: "auto" }}>
+                {filtered.length === 0
+                  ? <p style={{ margin: 0, padding: "0.75rem 1rem", fontSize: "0.8125rem", color: "var(--color-text-muted)" }}>No owners found</p>
+                  : filtered.map(o => (
+                    <button key={o.userPublicId} type="button" onClick={() => select(o)}
+                      style={{ display: "flex", alignItems: "center", gap: "0.6rem", width: "100%", padding: "0.55rem 0.875rem", border: "none", background: "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit" }}>
+                      <div style={{ width: 26, height: 26, borderRadius: "50%", backgroundColor: "var(--color-primary)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", fontWeight: 700, flexShrink: 0 }}>
+                        {o.firstName[0]}{o.lastName[0]}
+                      </div>
+                      <div>
+                        <p style={{ margin: 0, fontWeight: 600, fontSize: "0.8125rem", color: "var(--color-text)" }}>{o.firstName} {o.lastName}</p>
+                        {o.phone && <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--color-text-muted)" }}>{o.phone}</p>}
+                      </div>
+                    </button>
+                  ))
+                }
+              </div>
+            )}
+          </div>
+        )
+      ) : (
+        <input style={inputStyle} placeholder="Paste owner public ID (UUID)"
+          value={customId} onChange={e => { setCustomId(e.target.value); onChange(e.target.value.trim()) }} />
+      )}
+    </div>
+  )
+}
+
 export default function ListingFormModal({ onClose, onSubmit, initial }) {
-  const [form, setForm]     = useState(initial ?? EMPTY)
-  const [image, setImage]   = useState(null)
-  const [errors, setErrors] = useState({})
+  const [form, setForm]       = useState(initial ?? { title: "", address: "", price: "", type: "APARTMENT", status: "AVAILABLE", bedrooms: "", bathrooms: "", areaSqm: "", description: "", ownerPublicId: "" })
+  const [image, setImage]     = useState(null)
+  const [errors, setErrors]   = useState({})
   const [loading, setLoading] = useState(false)
   const { location, provinces, districts, sectors, cells, villages, pick } = useLocationPicker()
 
@@ -58,24 +135,26 @@ export default function ListingFormModal({ onClose, onSubmit, initial }) {
     if (Object.keys(e).length) { setErrors(e); return }
     setLoading(true)
     try {
-      const payload = {
+      const locationCode = location.villageCode || location.cellCode || location.sectorCode || location.districtCode || location.provinceCode
+      const created = await propertiesApi.create({
         title:       form.title,
         description: form.description,
         address:     form.address,
-        city:        location.districtName ?? "",
+        city:        location.districtCode ?? "",
         country:     "Rwanda",
         price:       Number(form.price),
         type:        form.type,
         bedrooms:    Number(form.bedrooms)  || 0,
         bathrooms:   Number(form.bathrooms),
         areaSqm:     Number(form.areaSqm),
-        ownerPublicId: form.ownerPublicId ?? null,
-      }
-      const created = await propertiesApi.create(payload)
+        locationCode,
+        ...(form.ownerPublicId && { ownerPublicId: form.ownerPublicId }),
+      })
       toast.success("Listing created successfully")
       onSubmit(created)
     } catch (err) {
-      toast.error(err.message ?? "Failed to create listing")
+      const backendErrors = err?.response?.data?.errors
+      if (Array.isArray(backendErrors)) toast.error(backendErrors.join(" · "))
     } finally {
       setLoading(false)
     }
@@ -105,7 +184,6 @@ export default function ListingFormModal({ onClose, onSubmit, initial }) {
         {/* Body */}
         <div style={{ padding: "1.5rem", overflowY: "auto", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
 
-          {/* Basic */}
           <Field label="Title" error={errors.title}>
             <input style={inputStyle} value={form.title} onChange={e => set("title", e.target.value)} placeholder="Modern Downtown Apartment" />
           </Field>
@@ -127,22 +205,17 @@ export default function ListingFormModal({ onClose, onSubmit, initial }) {
             <input style={inputStyle} type="number" min="0" value={form.price} onChange={e => set("price", e.target.value)} placeholder="485000" />
           </Field>
 
-          {/* Location */}
           <div>
             <p style={{ margin: "0 0 0.75rem", fontWeight: 700, fontSize: "0.8125rem", color: "var(--color-text)" }}>Location</p>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
               <Field label="Street Address" error={errors.address}>
                 <input style={inputStyle} value={form.address} onChange={e => set("address", e.target.value)} placeholder="KG 123 St" />
               </Field>
-              <LocationFields
-                location={location} provinces={provinces} districts={districts}
-                sectors={sectors} cells={cells} villages={villages}
-                pick={pick} errors={errors}
-              />
+              <LocationFields location={location} provinces={provinces} districts={districts}
+                sectors={sectors} cells={cells} villages={villages} pick={pick} errors={errors} />
             </div>
           </div>
 
-          {/* Specs */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.75rem" }}>
             <Field label="Bedrooms">
               <input style={inputStyle} type="number" min="0" value={form.bedrooms} onChange={e => set("bedrooms", e.target.value)} placeholder="2" />
@@ -155,13 +228,17 @@ export default function ListingFormModal({ onClose, onSubmit, initial }) {
             </Field>
           </div>
 
-          {/* Image */}
           <ImageUpload value={image} onChange={setImage} error={errors.image} />
 
-          {/* Description — required */}
           <Field label="Description" error={errors.description}>
-            <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 80 }} value={form.description} onChange={e => set("description", e.target.value)} placeholder="Describe the property — location highlights, features, condition…" />
+            <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 80 }} value={form.description}
+              onChange={e => set("description", e.target.value)} placeholder="Describe the property…" />
           </Field>
+
+          <div>
+            <p style={{ margin: "0 0 0.5rem", fontWeight: 700, fontSize: "0.8125rem", color: "var(--color-text)" }}>Property Owner <span style={{ fontWeight: 400, color: "var(--color-text-muted)" }}>(optional)</span></p>
+            <OwnerPicker onChange={v => set("ownerPublicId", v)} />
+          </div>
         </div>
 
         {/* Footer */}

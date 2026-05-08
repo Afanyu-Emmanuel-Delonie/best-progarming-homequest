@@ -105,7 +105,7 @@ public class TransactionController {
     }
 
     @PatchMapping("/{id:\\d+}/status")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_AGENT', 'ROLE_ADMIN')")
     @Operation(summary = "Update transaction status", description = "PENDING, COMPLETED, CANCELLED. Completing triggers real-time notifications to all parties.")
     public ResponseEntity<TransactionResponse> updateStatus(@PathVariable Long id, @RequestParam TransactionStatus status) {
         return ResponseEntity.ok(transactionService.updateStatus(id, status));

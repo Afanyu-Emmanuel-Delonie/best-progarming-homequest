@@ -31,9 +31,14 @@ client.interceptors.response.use(
     // Skip toast for silent requests (expected not-found lookups)
     const isSilent = err.config?.headers?.["X-Silent-Request"] === "true";
     if (!isSilent) {
+      const data = err.response?.data
+      const validationErrors = Array.isArray(data?.errors) && data.errors.length
+        ? data.errors.join(" · ")
+        : null
       const message =
-        err.response?.data?.message ||
-        err.response?.data?.error ||
+        validationErrors ||
+        data?.message ||
+        data?.error ||
         (err.code === "ERR_NETWORK"
           ? "Cannot reach server. Please check your connection."
           : null) ||

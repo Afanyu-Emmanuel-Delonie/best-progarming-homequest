@@ -27,6 +27,7 @@ public class PropertyRequest {
     private BigDecimal areaSqm;
     private PropertyType type;
     private String ownerPublicId;
+    private String locationCode;
     /** Optional cover image URL for listings. */
     private String imageUrl;
 }

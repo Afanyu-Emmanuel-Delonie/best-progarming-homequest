@@ -43,6 +43,7 @@ public class PropertyService {
                 .type(request.getType() != null ? request.getType() : PropertyType.APARTMENT)
                 .listingAgentPublicId(listingAgentPublicId)
                 .ownerPublicId(request.getOwnerPublicId())
+                .locationCode(request.getLocationCode())
                 .companyId(companyId)
                 .imageUrl(request.getImageUrl())
                 .build();

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { Eye, EyeOff, Home, Loader2, Building2, UserCheck, ArrowLeft } from "lucide-react"
 import { useDispatch } from "react-redux"
@@ -25,8 +25,17 @@ export default function Register() {
     firstName: "", lastName: "", email: "", password: "", confirmPassword: "",
     licenseNumber: "", companyId: "",
   })
+  const [redirectTo, setRedirectTo] = useState(null)
 
   const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: "" })); setError("") }
+
+  useEffect(() => {
+    if (!redirectTo) return
+    const id = window.requestAnimationFrame(() => {
+      navigate(redirectTo, { replace: true })
+    })
+    return () => window.cancelAnimationFrame(id)
+  }, [redirectTo, navigate])
 
   const validate = () => {
     const e = {}
@@ -66,7 +75,7 @@ export default function Register() {
         ROLE_OWNER:    ROUTES.OWNER,
         ROLE_CUSTOMER: ROUTES.CLIENT,
       }
-      navigate(ROLE_REDIRECT[decodedRole] ?? ROUTES.CLIENT)
+      setRedirectTo(ROLE_REDIRECT[decodedRole] ?? ROUTES.CLIENT)
     } catch (err) {
       setError(err.message)
     } finally {

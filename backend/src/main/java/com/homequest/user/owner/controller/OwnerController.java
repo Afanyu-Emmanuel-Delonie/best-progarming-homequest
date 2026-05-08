@@ -1,5 +1,7 @@
 package com.homequest.user.owner.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -38,6 +40,12 @@ public class OwnerController {
     @PreAuthorize("hasAuthority('ROLE_OWNER')")
     public ResponseEntity<OwnerResponse> getMyProfile(Authentication auth) {
         return ResponseEntity.ok(ownerService.getByUserPublicId((String) auth.getPrincipal()));
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyAuthority('ROLE_AGENT', 'ROLE_ADMIN')")
+    public ResponseEntity<List<OwnerResponse>> getAll() {
+        return ResponseEntity.ok(ownerService.getAll());
     }
 
     @GetMapping("/by-public-id/{publicId}")

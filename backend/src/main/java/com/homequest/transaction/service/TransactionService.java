@@ -2,6 +2,7 @@ package com.homequest.transaction.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -10,6 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.homequest.gateway.notification.NotificationEvent;
 import com.homequest.gateway.notification.NotificationService;
+import com.homequest.property.model.Property;
+import com.homequest.property.model.PropertyStatus;
+import com.homequest.property.repository.PropertyRepository;
 import com.homequest.transaction.dto.CommissionResponse;
 import com.homequest.transaction.dto.TransactionRequest;
 import com.homequest.transaction.dto.TransactionResponse;
@@ -34,6 +38,7 @@ public class TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final CommissionRepository commissionRepository;
+    private final PropertyRepository propertyRepository;
     private final NotificationService notificationService;
 
     @Transactional
@@ -160,6 +165,23 @@ public class TransactionService {
         TransactionResponse response = toResponse(saved);
 
         if (status == TransactionStatus.COMPLETED) {
+            propertyRepository.findById(saved.getPropertyId()).ifPresent(property -> {
+                property.setStatus(PropertyStatus.SOLD);
+                property.setBuyerPublicId(saved.getBuyerPublicId());
+                property.setSellingAgentPublicId(saved.getSellingAgentPublicId());
+                propertyRepository.save(property);
+            });
+
+            LocalDateTime paidAt = LocalDateTime.now();
+            List<Commission> commissions = commissionRepository.findByTransactionId(saved.getId()).stream()
+                    .filter(c -> c.getRecipientType() != CommissionRecipientType.COMPANY)
+                    .peek(c -> {
+                        c.setStatus(CommissionStatus.PAID);
+                        c.setPaidAt(paidAt);
+                    })
+                    .toList();
+            commissionRepository.saveAll(commissions);
+
             // notify listing agent
             notificationService.notifyUser(saved.getListingAgentPublicId(),
                     NotificationEvent.builder()
@@ -195,6 +217,13 @@ public class TransactionService {
                             .message("A new transaction has been completed")
                             .payload(response)
                             .build());
+        } else if (status == TransactionStatus.CANCELLED) {
+            propertyRepository.findById(saved.getPropertyId()).ifPresent(property -> {
+                if (property.getStatus() == PropertyStatus.UNDER_OFFER) {
+                    property.setStatus(PropertyStatus.AVAILABLE);
+                    propertyRepository.save(property);
+                }
+            });
         }
         return response;
     }

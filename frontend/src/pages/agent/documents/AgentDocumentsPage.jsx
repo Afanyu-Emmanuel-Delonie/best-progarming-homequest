@@ -2,18 +2,28 @@ import { useEffect, useState } from "react"
 import StaffDocumentsPage from "../../../components/shared/StaffDocumentsPage"
 import { documentsApi } from "../../../api/documents.api"
 import { applicationsApi } from "../../../api/applications.api"
+import { propertiesApi } from "../../../api/properties.api"
+import { clientsApi, usersApi } from "../../../api/users.api"
+import client from "../../../api/client"
 import { Loader2 } from "lucide-react"
 
 export default function AgentDocumentsPage() {
-  const [docs, setDocs]         = useState(null)
-  const [relatedOpts, setRelated] = useState([])
+  const [docs, setDocs]       = useState(null)
+  const [clients, setClients] = useState([])
+  const [owners, setOwners]   = useState([])
 
   useEffect(() => {
-    Promise.all([
-      documentsApi.getMy(),
-      applicationsApi.getMyListings({ page: 0, size: 100 }),
-    ]).then(([documents, appsRes]) => {
-      const apps = appsRes.content ?? appsRes ?? []
+    // First resolve the agent's own companyId, then fetch everything in parallel
+    client.get("/agents/me").then(r => r.data).catch(() => null).then(async (agentProfile) => {
+      const companyId = agentProfile?.companyId
+
+      const [documents, appsRes, listingsRes, clientList] = await Promise.all([
+        documentsApi.getMy(),
+        applicationsApi.getMyListings({ page: 0, size: 100 }),
+        propertiesApi.getMyListings({ page: 0, size: 100 }),
+        companyId ? clientsApi.getByCompany(companyId) : Promise.resolve([]),
+      ])
+
       setDocs(documents.map(d => ({
         id:           d.id,
         name:         d.name,
@@ -24,7 +34,14 @@ export default function AgentDocumentsPage() {
         status:       d.status ?? "PENDING",
         uploadedAt:   d.createdAt ? d.createdAt.split("T")[0] : "—",
       })))
-      setRelated(apps.map(a => `Application #${a.id} — Property #${a.propertyId}`))
+
+      setClients(clientList ?? [])
+
+      // Resolve unique owner profiles from listings
+      const listings = listingsRes.content ?? listingsRes ?? []
+      const uniqueOwnerIds = [...new Set(listings.map(p => p.ownerPublicId).filter(Boolean))]
+      const ownerProfiles = await Promise.all(uniqueOwnerIds.map(pid => usersApi.getOwnerByPublicId(pid)))
+      setOwners(ownerProfiles.filter(Boolean))
     }).catch(() => setDocs([]))
   }, [])
 
@@ -39,7 +56,8 @@ export default function AgentDocumentsPage() {
     <StaffDocumentsPage
       documents={docs}
       requests={[]}
-      relatedOptions={relatedOpts}
+      clients={clients}
+      owners={owners}
       onVerify={(id) => documentsApi.verify(id)}
       onReject={(id) => documentsApi.reject(id)}
     />

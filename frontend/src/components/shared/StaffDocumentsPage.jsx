@@ -1,6 +1,7 @@
 import { useRef, useState } from "react"
 import { UploadCloud, FileText, FileImage, File, X, CheckCircle, Clock, XCircle, AlertCircle, Download, Plus, MoreHorizontal } from "lucide-react"
 import { DOCUMENT_TYPE_LABELS } from "../../constants/enums"
+import { documentsApi } from "../../api/documents.api"
 
 // ── helpers ────────────────────────────────────────────────────────────────
 function FileIcon({ mime, size = 15 }) {
@@ -73,43 +74,141 @@ function MenuItem({ icon, label, color = "var(--color-text)", onClick }) {
 }
 
 // ── Request modal ──────────────────────────────────────────────────────────
-function RequestModal({ onClose, onRequested, relatedOptions }) {
-  const [form, setForm] = useState({ type: "ID_DOCUMENT", relatedLabel: relatedOptions[0] ?? "", note: "" })
+function RequestModal({ onClose, onRequested, clients, owners }) {
+  const [recipientType, setRecipientType] = useState("buyer") // "buyer" | "owner"
+  const [form, setForm]       = useState({ type: "ID_DOCUMENT", recipientPublicId: "", description: "", applicationId: "", propertyId: "" })
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError]     = useState("")
 
-  const submit = () => {
-    if (!form.relatedLabel) return
-    onRequested({ ...form, id: Date.now(), requestedAt: new Date().toISOString().split("T")[0], status: "REQUESTED" })
-    onClose()
+  const list = recipientType === "buyer" ? clients : owners
+
+  const handleTypeToggle = (t) => {
+    setRecipientType(t)
+    setForm(f => ({ ...f, recipientPublicId: "" }))
+    setError("")
+  }
+
+  const submit = async () => {
+    if (!form.recipientPublicId) { setError(`Please select a ${recipientType === "buyer" ? "prospect buyer" : "property owner"}.`); return }
+    if (!form.description.trim()) { setError("Description is required."); return }
+    setSubmitting(true)
+    setError("")
+    try {
+      const payload = {
+        recipientPublicId: form.recipientPublicId,
+        type:              form.type,
+        description:       form.description,
+        ...(form.applicationId && { applicationId: Number(form.applicationId) }),
+        ...(form.propertyId    && { propertyId:    Number(form.propertyId) }),
+      }
+      const doc = await documentsApi.request(payload)
+      onRequested(doc)
+      onClose()
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
     <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }} onClick={onClose}>
-      <div style={{ backgroundColor: "#fff", borderRadius: "16px", width: "100%", maxWidth: 420, padding: "1.75rem", position: "relative" }} onClick={e => e.stopPropagation()}>
+      <div style={{ backgroundColor: "#fff", borderRadius: "16px", width: "100%", maxWidth: 440, padding: "1.75rem", position: "relative" }} onClick={e => e.stopPropagation()}>
         <button onClick={onClose} style={{ position: "absolute", top: "1rem", right: "1rem", background: "none", border: "none", cursor: "pointer", color: "var(--color-text-muted)", display: "flex" }}><X size={18} /></button>
 
         <p style={{ margin: "0 0 1.25rem", fontWeight: 700, fontSize: "1.0625rem", color: "var(--color-text)" }}>Request Document</p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+
+          {/* Recipient type toggle */}
+          <div>
+            <label style={LBL}>Send request to <span style={{ color: "#B91C1C" }}>*</span></label>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+              {[
+                { key: "buyer", label: "Prospect Buyer" },
+                { key: "owner", label: "Property Owner" },
+              ].map(opt => (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => handleTypeToggle(opt.key)}
+                  style={{
+                    padding: "0.6rem 0.75rem", borderRadius: "8px", cursor: "pointer", fontFamily: "inherit",
+                    fontWeight: 600, fontSize: "0.8375rem", border: "1.5px solid",
+                    borderColor: recipientType === opt.key ? "var(--color-primary)" : "var(--color-border)",
+                    backgroundColor: recipientType === opt.key ? "#FFF5F0" : "#fff",
+                    color: recipientType === opt.key ? "var(--color-primary)" : "var(--color-text-muted)",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Recipient selector */}
+          <div>
+            <label style={LBL}>
+              {recipientType === "buyer" ? "Prospect Buyer" : "Property Owner"} <span style={{ color: "#B91C1C" }}>*</span>
+            </label>
+            <select
+              value={form.recipientPublicId}
+              onChange={e => setForm(f => ({ ...f, recipientPublicId: e.target.value }))}
+              style={{ ...INPUT, borderColor: !form.recipientPublicId && error ? "#B91C1C" : "var(--color-border)" }}
+            >
+              <option value="">— Select {recipientType === "buyer" ? "buyer" : "owner"} —</option>
+              {list.map(p => (
+                <option key={p.userPublicId} value={p.userPublicId}>
+                  {p.firstName} {p.lastName}
+                </option>
+              ))}
+            </select>
+            {list.length === 0 && (
+              <p style={{ margin: "0.3rem 0 0", fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+                No {recipientType === "buyer" ? "buyers" : "owners"} found.
+              </p>
+            )}
+          </div>
+
           <div>
             <label style={LBL}>Document Type</label>
             <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} style={INPUT}>
               {Object.entries(DOCUMENT_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
           </div>
+
           <div>
-            <label style={LBL}>Related To</label>
-            <select value={form.relatedLabel} onChange={e => setForm(f => ({ ...f, relatedLabel: e.target.value }))} style={INPUT}>
-              {relatedOptions.map(o => <option key={o} value={o}>{o}</option>)}
-            </select>
+            <label style={LBL}>Description <span style={{ color: "#B91C1C" }}>*</span></label>
+            <textarea
+              value={form.description}
+              onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+              rows={2}
+              placeholder="e.g. Please upload a clear copy of your national ID…"
+              style={{ ...INPUT, resize: "vertical" }}
+            />
           </div>
-          <div>
-            <label style={LBL}>Note for uploader <span style={{ fontWeight: 400, textTransform: "none" }}>(optional)</span></label>
-            <textarea value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))} rows={2} placeholder="e.g. Please upload a clear copy…" style={{ ...INPUT, resize: "vertical" }} />
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+            <div>
+              <label style={LBL}>Application ID <span style={{ fontWeight: 400, textTransform: "none" }}>(optional)</span></label>
+              <input type="number" min="1" value={form.applicationId} onChange={e => setForm(f => ({ ...f, applicationId: e.target.value }))} placeholder="e.g. 12" style={INPUT} />
+            </div>
+            <div>
+              <label style={LBL}>Property ID <span style={{ fontWeight: 400, textTransform: "none" }}>(optional)</span></label>
+              <input type="number" min="1" value={form.propertyId} onChange={e => setForm(f => ({ ...f, propertyId: e.target.value }))} placeholder="e.g. 5" style={INPUT} />
+            </div>
           </div>
+
+          {error && <p style={{ margin: 0, fontSize: "0.8rem", color: "#B91C1C" }}>{error}</p>}
         </div>
 
-        <button onClick={submit} style={{ marginTop: "1.25rem", width: "100%", padding: "0.75rem", borderRadius: "10px", border: "none", backgroundColor: "var(--color-primary)", color: "#fff", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer", fontFamily: "inherit" }}>
-          Send Request
+        <button
+          onClick={submit}
+          disabled={submitting}
+          style={{ marginTop: "1.25rem", width: "100%", padding: "0.75rem", borderRadius: "10px", border: "none", backgroundColor: "var(--color-primary)", color: "#fff", fontWeight: 700, fontSize: "0.9rem", cursor: submitting ? "not-allowed" : "pointer", fontFamily: "inherit", opacity: submitting ? 0.7 : 1 }}
+        >
+          {submitting ? "Sending…" : "Send Request"}
         </button>
       </div>
     </div>
@@ -117,7 +216,7 @@ function RequestModal({ onClose, onRequested, relatedOptions }) {
 }
 
 // ── Main component ─────────────────────────────────────────────────────────
-export default function StaffDocumentsPage({ documents: initialDocs, requests: initialRequests, relatedOptions, onVerify, onReject }) {
+export default function StaffDocumentsPage({ documents: initialDocs, requests: initialRequests, clients = [], owners = [], onVerify, onReject }) {
   const [docs, setDocs]           = useState(initialDocs)
   const [requests, setRequests]   = useState(initialRequests)
   const [tab, setTab]             = useState("DOCUMENTS")
@@ -278,7 +377,8 @@ export default function StaffDocumentsPage({ documents: initialDocs, requests: i
 
       {showRequest && (
         <RequestModal
-          relatedOptions={relatedOptions}
+          clients={clients}
+          owners={owners}
           onClose={() => setShowRequest(false)}
           onRequested={handleRequested}
         />

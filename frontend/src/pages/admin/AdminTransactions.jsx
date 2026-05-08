@@ -8,7 +8,7 @@ import { TRANSACTION_STATUS as STATUS_STYLES, PAGE_SIZE } from "../../constants/
 import { useFilterPanel } from "../../hooks/useFilterPanel"
 import { useTableData } from "../../hooks/useTableData"
 import { transactionsApi } from "../../api/transactions.api"
-import { resolvePublicId } from "../../api/users.api"
+import { companiesApi, resolvePublicId, usersApi } from "../../api"
 import { toast } from "react-toastify"
 
 const inp = { padding: "0.55rem 0.85rem", borderRadius: "8px", border: "1px solid var(--color-border)", backgroundColor: "var(--color-bg-muted)", fontSize: "0.875rem", color: "var(--color-text)", outline: "none", fontFamily: "inherit", width: "100%", boxSizing: "border-box" }
@@ -23,13 +23,51 @@ function Field({ label, error, children }) {
   )
 }
 
-const EMPTY_TX = { propertyId: "", sellingAgentPublicId: "", ownerPublicId: "", buyerPublicId: "", companyId: "1", saleAmount: "", commissionRate: "0.05", type: "SALE" }
+const EMPTY_TX = { propertyId: "", sellingAgentPublicId: "", ownerPublicId: "", buyerPublicId: "", companyId: "", saleAmount: "", commissionRate: "0.05", type: "SALE" }
 
 function AddTransactionModal({ onClose, onCreated }) {
   const [form, setForm]       = useState(EMPTY_TX)
   const [errors, setErrors]   = useState({})
   const [loading, setLoading] = useState(false)
+  const [loadingLists, setLoadingLists] = useState(true)
+  const [users, setUsers] = useState([])
+  const [companies, setCompanies] = useState([])
   const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: "" })) }
+
+  useEffect(() => {
+    let alive = true
+    Promise.all([
+      usersApi.getAll(),
+      companiesApi.getAll(),
+    ])
+      .then(async ([usersRes, companiesRes]) => {
+        const allUsers = Array.isArray(usersRes) ? usersRes : usersRes.content ?? []
+        const allCompanies = Array.isArray(companiesRes) ? companiesRes : companiesRes.content ?? []
+
+        const roleUsers = allUsers.filter(u =>
+          ["ROLE_AGENT", "ROLE_OWNER", "ROLE_CUSTOMER"].includes(u.role) && u.publicId
+        )
+
+        const withLabels = await Promise.all(roleUsers.map(async (u) => {
+          const name = await resolvePublicId(u.publicId)
+          return {
+            ...u,
+            label: `${name}${u.email ? ` · ${u.email}` : ""}`,
+          }
+        }))
+
+        if (!alive) return
+        setUsers(withLabels)
+        setCompanies(allCompanies)
+        if (!form.companyId && allCompanies.length > 0) {
+          setForm(f => ({ ...f, companyId: String(allCompanies[0].id) }))
+        }
+      })
+      .catch(() => {})
+      .finally(() => alive && setLoadingLists(false))
+
+    return () => { alive = false }
+  }, [])
 
   const validate = () => {
     const e = {}
@@ -37,9 +75,14 @@ function AddTransactionModal({ onClose, onCreated }) {
     if (!form.sellingAgentPublicId.trim()) e.sellingAgentPublicId = "Required"
     if (!form.ownerPublicId.trim())    e.ownerPublicId        = "Required"
     if (!form.buyerPublicId.trim())    e.buyerPublicId        = "Required"
+    if (!form.companyId)               e.companyId            = "Required"
     if (!form.saleAmount || isNaN(Number(form.saleAmount))) e.saleAmount = "Required"
     return e
   }
+
+  const agents = users.filter(u => u.role === "ROLE_AGENT")
+  const owners = users.filter(u => u.role === "ROLE_OWNER")
+  const buyers = users.filter(u => u.role === "ROLE_CUSTOMER")
 
   const handleSubmit = async () => {
     const e = validate()
@@ -51,7 +94,7 @@ function AddTransactionModal({ onClose, onCreated }) {
         sellingAgentPublicId: form.sellingAgentPublicId,
         ownerPublicId:       form.ownerPublicId,
         buyerPublicId:       form.buyerPublicId,
-        companyId:           Number(form.companyId) || 1,
+        companyId:           Number(form.companyId),
         saleAmount:          Number(form.saleAmount),
         commissionRate:      Number(form.commissionRate),
         type:                form.type,
@@ -91,17 +134,39 @@ function AddTransactionModal({ onClose, onCreated }) {
           <Field label="Commission Rate (e.g. 0.05 = 5%)">
             <input style={inp} type="number" step="0.01" value={form.commissionRate} onChange={e => set("commissionRate", e.target.value)} placeholder="0.05" />
           </Field>
-          <Field label="Selling Agent Public ID" error={errors.sellingAgentPublicId}>
-            <input style={inp} value={form.sellingAgentPublicId} onChange={e => set("sellingAgentPublicId", e.target.value)} placeholder="uuid" />
+          <Field label="Selling Agent" error={errors.sellingAgentPublicId}>
+            <select style={inp} value={form.sellingAgentPublicId} onChange={e => set("sellingAgentPublicId", e.target.value)} disabled={loadingLists}>
+              <option value="">{loadingLists ? "Loading agents..." : "Select an agent"}</option>
+              {agents.map(agent => (
+                <option key={agent.publicId} value={agent.publicId}>{agent.label}</option>
+              ))}
+            </select>
           </Field>
-          <Field label="Owner Public ID" error={errors.ownerPublicId}>
-            <input style={inp} value={form.ownerPublicId} onChange={e => set("ownerPublicId", e.target.value)} placeholder="uuid" />
+          <Field label="Owner" error={errors.ownerPublicId}>
+            <select style={inp} value={form.ownerPublicId} onChange={e => set("ownerPublicId", e.target.value)} disabled={loadingLists}>
+              <option value="">{loadingLists ? "Loading owners..." : "Select an owner"}</option>
+              {owners.map(owner => (
+                <option key={owner.publicId} value={owner.publicId}>{owner.label}</option>
+              ))}
+            </select>
           </Field>
-          <Field label="Buyer Public ID" error={errors.buyerPublicId}>
-            <input style={inp} value={form.buyerPublicId} onChange={e => set("buyerPublicId", e.target.value)} placeholder="uuid" />
+          <Field label="Buyer" error={errors.buyerPublicId}>
+            <select style={inp} value={form.buyerPublicId} onChange={e => set("buyerPublicId", e.target.value)} disabled={loadingLists}>
+              <option value="">{loadingLists ? "Loading buyers..." : "Select a buyer"}</option>
+              {buyers.map(buyer => (
+                <option key={buyer.publicId} value={buyer.publicId}>{buyer.label}</option>
+              ))}
+            </select>
           </Field>
-          <Field label="Company ID">
-            <input style={inp} type="number" value={form.companyId} onChange={e => set("companyId", e.target.value)} placeholder="1" />
+          <Field label="Company" error={errors.companyId}>
+            <select style={inp} value={form.companyId} onChange={e => set("companyId", e.target.value)} disabled={loadingLists}>
+              <option value="">{loadingLists ? "Loading companies..." : "Select a company"}</option>
+              {companies.map(company => (
+                <option key={company.id} value={company.id}>
+                  {company.name ?? `Company #${company.id}`}
+                </option>
+              ))}
+            </select>
           </Field>
         </div>
         <div style={{ display: "flex", gap: "0.65rem", justifyContent: "flex-end", padding: "1rem 1.5rem", borderTop: "1px solid var(--color-border)", flexShrink: 0 }}>

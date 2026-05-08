@@ -88,6 +88,8 @@ public class DataSeeder implements ApplicationRunner {
             log.info("Patched {} PENDING agent(s) to ACTIVE.", pendingAgents.size());
         }
 
+        seedLocations();
+
         if (userRepository.count() > 0) {
             log.info("Database already seeded — skipping.");
             return;
@@ -96,25 +98,50 @@ public class DataSeeder implements ApplicationRunner {
         log.info("Seeding database...");
 
         // ── 1. LOCATIONS ──────────────────────────────────────────────
-        Location country = locationRepository.save(Location.builder()
-                .code("RW").name("Rwanda").type(LocationType.COUNTRY).build());
+        Location country = saveLocation("RW", "Rwanda", LocationType.COUNTRY, null);
 
-        Location kigali = locationRepository.save(Location.builder()
-                .code("RW-KGL").name("Kigali City").type(LocationType.PROVINCE).parent(country).build());
+        Location kigali = saveLocation("RW-KGL", "Kigali City", LocationType.PROVINCE, country);
+        Location northern = saveLocation("RW-NOR", "Northern Province", LocationType.PROVINCE, country);
+        Location southern = saveLocation("RW-SOU", "Southern Province", LocationType.PROVINCE, country);
+        Location western = saveLocation("RW-WES", "Western Province", LocationType.PROVINCE, country);
+        Location eastern = saveLocation("RW-EAS", "Eastern Province", LocationType.PROVINCE, country);
 
-        Location gasabo = locationRepository.save(Location.builder()
-                .code("RW-KGL-GSB").name("Gasabo").type(LocationType.DISTRICT).parent(kigali).build());
+        Location gasabo = saveLocation("RW-KGL-GSB", "Gasabo", LocationType.DISTRICT, kigali);
+        Location nyarugenge = saveLocation("RW-KGL-NYR", "Nyarugenge", LocationType.DISTRICT, kigali);
+        Location kicukiro = saveLocation("RW-KGL-KIC", "Kicukiro", LocationType.DISTRICT, kigali);
+        Location musanze = saveLocation("RW-NOR-MSZ", "Musanze", LocationType.DISTRICT, northern);
+        Location huye = saveLocation("RW-SOU-HUY", "Huye", LocationType.DISTRICT, southern);
+        Location rusizi = saveLocation("RW-WES-RZI", "Rusizi", LocationType.DISTRICT, western);
+        Location nyagatare = saveLocation("RW-EAS-NYT", "Nyagatare", LocationType.DISTRICT, eastern);
 
-        Location nyarugenge = locationRepository.save(Location.builder()
-                .code("RW-KGL-NYR").name("Nyarugenge").type(LocationType.DISTRICT).parent(kigali).build());
+        Location remera = saveLocation("RW-KGL-GSB-REM", "Remera", LocationType.SECTOR, gasabo);
+        Location kacyiru = saveLocation("RW-KGL-GSB-KCY", "Kacyiru", LocationType.SECTOR, gasabo);
+        Location gitega = saveLocation("RW-KGL-NYR-GTG", "Gitega", LocationType.SECTOR, nyarugenge);
+        Location kanombe = saveLocation("RW-KGL-KIC-KNB", "Kanombe", LocationType.SECTOR, kicukiro);
+        Location muhoza = saveLocation("RW-NOR-MSZ-MHZ", "Muhoza", LocationType.SECTOR, musanze);
+        Location butare = saveLocation("RW-SOU-HUY-BTR", "Tumba", LocationType.SECTOR, huye);
+        Location kamembe = saveLocation("RW-WES-RZI-KMB", "Kamembe", LocationType.SECTOR, rusizi);
+        Location tabagwe = saveLocation("RW-EAS-NYT-TBG", "Tabagwe", LocationType.SECTOR, nyagatare);
 
-        Location northern = locationRepository.save(Location.builder()
-                .code("RW-NOR").name("Northern Province").type(LocationType.PROVINCE).parent(country).build());
+        Location rukiriCell = saveLocation("RW-KGL-GSB-REM-01", "Rukiri I", LocationType.CELL, remera);
+        Location kamatamuCell = saveLocation("RW-KGL-GSB-KCY-01", "Kamatamu", LocationType.CELL, kacyiru);
+        Location rwezamenyoCell = saveLocation("RW-KGL-NYR-GTG-01", "Rwezamenyo", LocationType.CELL, gitega);
+        Location kibagabagaCell = saveLocation("RW-KGL-KIC-KNB-01", "Kibagabaga", LocationType.CELL, kanombe);
+        Location cyabagaruraCell = saveLocation("RW-NOR-MSZ-MHZ-01", "Cyabagarura", LocationType.CELL, muhoza);
+        Location butareCell = saveLocation("RW-SOU-HUY-BTR-01", "Butare", LocationType.CELL, butare);
+        Location gikundamvuraCell = saveLocation("RW-WES-RZI-KMB-01", "Gikundamvura", LocationType.CELL, kamembe);
+        Location bushogaCell = saveLocation("RW-EAS-NYT-TBG-01", "Bushoga", LocationType.CELL, tabagwe);
 
-        Location musanze = locationRepository.save(Location.builder()
-                .code("RW-NOR-MSZ").name("Musanze").type(LocationType.DISTRICT).parent(northern).build());
+        saveLocation("RW-KGL-GSB-REM-01-V1", "Rukiri I", LocationType.VILLAGE, rukiriCell);
+        saveLocation("RW-KGL-GSB-KCY-01-V1", "Ruyenzi", LocationType.VILLAGE, kamatamuCell);
+        saveLocation("RW-KGL-NYR-GTG-01-V1", "Kimisagara", LocationType.VILLAGE, rwezamenyoCell);
+        saveLocation("RW-KGL-KIC-KNB-01-V1", "Nyarutarama", LocationType.VILLAGE, kibagabagaCell);
+        saveLocation("RW-NOR-MSZ-MHZ-01-V1", "Gacaca", LocationType.VILLAGE, cyabagaruraCell);
+        saveLocation("RW-SOU-HUY-BTR-01-V1", "Nyabihu", LocationType.VILLAGE, butareCell);
+        saveLocation("RW-WES-RZI-KMB-01-V1", "Nyundo", LocationType.VILLAGE, gikundamvuraCell);
+        saveLocation("RW-EAS-NYT-TBG-01-V1", "Kageyo", LocationType.VILLAGE, bushogaCell);
 
-        log.info("Locations seeded.");
+        log.info("Locations seeded: 5 provinces, 7 districts, 8 sectors, 8 cells, and 8 villages.");
 
         // ── 2. COMPANY ────────────────────────────────────────────────
         Company company = companyRepository.save(new Company());
@@ -408,6 +435,53 @@ public class DataSeeder implements ApplicationRunner {
         log.info("Test accounts seeded — check application.properties or README for credentials.");
     }
 
+    private void seedLocations() {
+        Location country = saveLocation("RW", "Rwanda", LocationType.COUNTRY, null);
+
+        Location kigali = saveLocation("RW-KGL", "Kigali City", LocationType.PROVINCE, country);
+        Location northern = saveLocation("RW-NOR", "Northern Province", LocationType.PROVINCE, country);
+        Location southern = saveLocation("RW-SOU", "Southern Province", LocationType.PROVINCE, country);
+        Location western = saveLocation("RW-WES", "Western Province", LocationType.PROVINCE, country);
+        Location eastern = saveLocation("RW-EAS", "Eastern Province", LocationType.PROVINCE, country);
+
+        Location gasabo = saveLocation("RW-KGL-GSB", "Gasabo", LocationType.DISTRICT, kigali);
+        Location nyarugenge = saveLocation("RW-KGL-NYR", "Nyarugenge", LocationType.DISTRICT, kigali);
+        Location kicukiro = saveLocation("RW-KGL-KIC", "Kicukiro", LocationType.DISTRICT, kigali);
+        Location musanze = saveLocation("RW-NOR-MSZ", "Musanze", LocationType.DISTRICT, northern);
+        Location huye = saveLocation("RW-SOU-HUY", "Huye", LocationType.DISTRICT, southern);
+        Location rusizi = saveLocation("RW-WES-RZI", "Rusizi", LocationType.DISTRICT, western);
+        Location nyagatare = saveLocation("RW-EAS-NYT", "Nyagatare", LocationType.DISTRICT, eastern);
+
+        Location remera = saveLocation("RW-KGL-GSB-REM", "Remera", LocationType.SECTOR, gasabo);
+        Location kacyiru = saveLocation("RW-KGL-GSB-KCY", "Kacyiru", LocationType.SECTOR, gasabo);
+        Location gitega = saveLocation("RW-KGL-NYR-GTG", "Gitega", LocationType.SECTOR, nyarugenge);
+        Location kanombe = saveLocation("RW-KGL-KIC-KNB", "Kanombe", LocationType.SECTOR, kicukiro);
+        Location muhoza = saveLocation("RW-NOR-MSZ-MHZ", "Muhoza", LocationType.SECTOR, musanze);
+        Location tumba = saveLocation("RW-SOU-HUY-TMB", "Tumba", LocationType.SECTOR, huye);
+        Location kamembe = saveLocation("RW-WES-RZI-KMB", "Kamembe", LocationType.SECTOR, rusizi);
+        Location tabagwe = saveLocation("RW-EAS-NYT-TBG", "Tabagwe", LocationType.SECTOR, nyagatare);
+
+        Location rukiriCell = saveLocation("RW-KGL-GSB-REM-01", "Rukiri I", LocationType.CELL, remera);
+        Location kamatamuCell = saveLocation("RW-KGL-GSB-KCY-01", "Kamatamu", LocationType.CELL, kacyiru);
+        Location rwezamenyoCell = saveLocation("RW-KGL-NYR-GTG-01", "Rwezamenyo", LocationType.CELL, gitega);
+        Location kibagabagaCell = saveLocation("RW-KGL-KIC-KNB-01", "Kibagabaga", LocationType.CELL, kanombe);
+        Location cyabagaruraCell = saveLocation("RW-NOR-MSZ-MHZ-01", "Cyabagarura", LocationType.CELL, muhoza);
+        Location butareCell = saveLocation("RW-SOU-HUY-TMB-01", "Butare", LocationType.CELL, tumba);
+        Location gikundamvuraCell = saveLocation("RW-WES-RZI-KMB-01", "Gikundamvura", LocationType.CELL, kamembe);
+        Location bushogaCell = saveLocation("RW-EAS-NYT-TBG-01", "Bushoga", LocationType.CELL, tabagwe);
+
+        saveLocation("RW-KGL-GSB-REM-01-V1", "Rukiri I", LocationType.VILLAGE, rukiriCell);
+        saveLocation("RW-KGL-GSB-KCY-01-V1", "Ruyenzi", LocationType.VILLAGE, kamatamuCell);
+        saveLocation("RW-KGL-NYR-GTG-01-V1", "Kimisagara", LocationType.VILLAGE, rwezamenyoCell);
+        saveLocation("RW-KGL-KIC-KNB-01-V1", "Nyarutarama", LocationType.VILLAGE, kibagabagaCell);
+        saveLocation("RW-NOR-MSZ-MHZ-01-V1", "Gacaca", LocationType.VILLAGE, cyabagaruraCell);
+        saveLocation("RW-SOU-HUY-TMB-01-V1", "Nyabihu", LocationType.VILLAGE, butareCell);
+        saveLocation("RW-WES-RZI-KMB-01-V1", "Nyundo", LocationType.VILLAGE, gikundamvuraCell);
+        saveLocation("RW-EAS-NYT-TBG-01-V1", "Kageyo", LocationType.VILLAGE, bushogaCell);
+
+        log.info("Locations seeded: country, 5 provinces, 7 districts, 8 sectors, 8 cells, and 8 villages.");
+    }
+
     private User saveUser(String firstName, String lastName, String email, String password, Role role) {
         String username = (firstName + lastName).toLowerCase(Locale.ROOT).replaceAll("\\s+", "");
         return userRepository.save(User.builder()
@@ -417,5 +491,21 @@ public class DataSeeder implements ApplicationRunner {
                 .role(role)
                 .isActive(true)
                 .build());
+    }
+
+    private Location saveLocation(String code, String name, LocationType type, Location parent) {
+        return locationRepository.findByCode(code)
+                .map(existing -> {
+                    existing.setName(name);
+                    existing.setType(type);
+                    existing.setParent(parent);
+                    return locationRepository.save(existing);
+                })
+                .orElseGet(() -> locationRepository.save(Location.builder()
+                        .code(code)
+                        .name(name)
+                        .type(type)
+                        .parent(parent)
+                        .build()));
     }
 }

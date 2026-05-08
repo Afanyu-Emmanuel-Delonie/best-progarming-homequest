@@ -21,6 +21,9 @@ import com.homequest.gateway.notification.NotificationEvent;
 import com.homequest.gateway.notification.NotificationService;
 import com.homequest.property.repository.PropertyApplicationRepository;
 import com.homequest.property.repository.PropertyRepository;
+import com.homequest.transaction.dto.TransactionRequest;
+import com.homequest.transaction.model.TransactionType;
+import com.homequest.transaction.service.TransactionService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,6 +33,7 @@ public class PropertyApplicationService {
 
     private final PropertyApplicationRepository applicationRepository;
     private final PropertyRepository propertyRepository;
+    private final TransactionService transactionService;
     private final NotificationService notificationService;
 
     @Transactional
@@ -113,14 +117,47 @@ public class PropertyApplicationService {
     @Transactional
     public PropertyApplicationResponse accept(Long id, String reviewerPublicId) {
         PropertyApplication application = findOrThrow(id);
+        if (application.getTransactionId() != null) {
+            return toResponse(application);
+        }
+
+        var property = propertyRepository.findById(application.getPropertyId())
+                .orElseThrow(() -> new IllegalArgumentException("Property not found"));
+
+        String listingAgentPublicId = property.getListingAgentPublicId() != null
+                ? property.getListingAgentPublicId()
+                : reviewerPublicId;
+        String sellingAgentPublicId = application.getAssignedAgentPublicId() != null
+                ? application.getAssignedAgentPublicId()
+                : (property.getSellingAgentPublicId() != null ? property.getSellingAgentPublicId() : listingAgentPublicId);
+
+        TransactionRequest request = new TransactionRequest();
+        request.setPropertyId(application.getPropertyId());
+        request.setSellingAgentPublicId(sellingAgentPublicId);
+        request.setOwnerPublicId(property.getOwnerPublicId());
+        request.setBuyerPublicId(application.getBuyerPublicId());
+        request.setCompanyId(property.getCompanyId());
+        request.setSaleAmount(application.getOfferAmount());
+        request.setCommissionRate(new java.math.BigDecimal("0.05"));
+        request.setType(TransactionType.SALE);
+
+        var transaction = transactionService.create(request, listingAgentPublicId);
+
         application.setStatus(ApplicationStatus.ACCEPTED);
         application.setReviewedBy(reviewerPublicId);
+        application.setTransactionId(transaction.getId());
         PropertyApplicationResponse response = toResponse(applicationRepository.save(application));
+
+        property.setStatus(com.homequest.property.model.PropertyStatus.UNDER_OFFER);
+        property.setBuyerPublicId(application.getBuyerPublicId());
+        property.setSellingAgentPublicId(sellingAgentPublicId);
+        propertyRepository.save(property);
+
         notificationService.notifyUser(application.getBuyerPublicId(),
                 NotificationEvent.builder()
                         .type(NotificationEvent.Types.APPLICATION_ACCEPTED)
                         .title("Bid Accepted")
-                        .message("Your bid on property " + application.getPropertyId() + " has been accepted")
+                        .message("Your bid on property " + application.getPropertyId() + " has been accepted and a pending transaction has been created")
                         .recipientPublicId(application.getBuyerPublicId())
                         .payload(response)
                         .build());
@@ -193,6 +230,7 @@ public class PropertyApplicationService {
                 .offerExpirationDate(a.getOfferExpirationDate())
                 .specialConditions(a.getSpecialConditions())
                 .assignedAgentPublicId(a.getAssignedAgentPublicId())
+                .transactionId(a.getTransactionId())
                 .status(a.getStatus())
                 .reviewedBy(a.getReviewedBy())
                 .createdAt(a.getCreatedAt())

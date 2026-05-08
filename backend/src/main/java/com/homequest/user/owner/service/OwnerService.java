@@ -1,5 +1,7 @@
 package com.homequest.user.owner.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +31,11 @@ public class OwnerService {
                 .nationalId(request.getNationalId())
                 .build();
         return toResponse(ownerRepository.save(owner));
+    }
+
+    @Transactional(readOnly = true)
+    public List<OwnerResponse> getAll() {
+        return ownerRepository.findAll().stream().map(this::toResponse).toList();
     }
 
     @Transactional(readOnly = true)
