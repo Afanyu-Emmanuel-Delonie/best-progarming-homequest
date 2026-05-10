@@ -1,0 +1,12 @@
+**/node_modules
+**/dist
+**/target
+**/.m2
+**/.vite
+**/.history
+.git
+.github
+.env
+*.log
+m2repo
+mvn-cache

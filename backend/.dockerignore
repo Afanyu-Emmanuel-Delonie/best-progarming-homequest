@@ -1,6 +1,14 @@
 target
+**/target
+.m2
+**/.m2
 .git
 .github
 .history
 .env
 *.log
+README.md
+HELP.md
+settings-workspace.xml
+mvnw
+mvnw.cmd

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { BedDouble, Bath, Maximize2, MapPin, ArrowRight, Heart } from "lucide-react"
 import { fmtCurrency } from "../../utils/formatters"
@@ -6,6 +6,17 @@ import { PROPERTY_STATUS, PROPERTY_TYPE_LABELS } from "../../constants/enums"
 import { ROUTES } from "../../constants/routes"
 import { toast } from "../../components/common/Toast"
 import { propertiesApi } from "../../api/properties.api"
+
+const DUMMY_PROPERTIES = [
+  { id: 1, title: "Modern Apartment in Kiyovu",    type: "APARTMENT",  status: "AVAILABLE",   price: 85000000,  bedrooms: 3, bathrooms: 2, areaSqm: 120, city: "Kigali", imageUrl: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&q=80" },
+  { id: 2, title: "Luxury Villa in Nyarutarama",   type: "VILLA",      status: "AVAILABLE",   price: 320000000, bedrooms: 5, bathrooms: 4, areaSqm: 450, city: "Kigali", imageUrl: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&q=80" },
+  { id: 3, title: "Family House in Kimironko",     type: "HOUSE",      status: "AVAILABLE",   price: 120000000, bedrooms: 4, bathrooms: 3, areaSqm: 220, city: "Kigali", imageUrl: "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=600&q=80" },
+  { id: 4, title: "Studio Apartment in Remera",    type: "APARTMENT",  status: "AVAILABLE",   price: 35000000,  bedrooms: 1, bathrooms: 1, areaSqm: 55,  city: "Kigali", imageUrl: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&q=80" },
+  { id: 5, title: "Commercial Space in CBD",       type: "COMMERCIAL", status: "AVAILABLE",   price: 250000000, bedrooms: 0, bathrooms: 2, areaSqm: 380, city: "Kigali", imageUrl: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80" },
+  { id: 6, title: "Penthouse in Gacuriro",         type: "APARTMENT",  status: "UNDER_OFFER", price: 195000000, bedrooms: 4, bathrooms: 3, areaSqm: 280, city: "Kigali", imageUrl: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&q=80" },
+]
+
+const TABS = ["All", "Apartment", "House", "Villa", "Commercial"]
 
 function useReveal() {
   const ref = useRef(null)
@@ -17,29 +28,19 @@ function useReveal() {
   return ref
 }
 
-const TABS = ["All", "Apartment", "House", "Villa", "Commercial"]
-
 export default function FeaturedProperties() {
   const ref = useReveal()
-  const [properties, setProperties] = useState([])
+  const [properties, setProperties] = useState(DUMMY_PROPERTIES)
   const [active, setActive]         = useState("All")
   const [saved, setSaved]           = useState(new Set())
 
-  const load = () => {
-    propertiesApi.getAll({ page: 0, size: 12, sortBy: "createdAt" })
-      .then(res => setProperties(res.content ?? res ?? []))
-      .catch(() => {})
-  }
-
-  useEffect(() => { load() }, [])
-
   useEffect(() => {
-    const onLive = (e) => {
-      const t = e.detail?.type
-      if (t === "PROPERTY_STATUS_CHANGED" || (typeof t === "string" && t.startsWith("APPLICATION"))) load()
-    }
-    window.addEventListener("homequest:live", onLive)
-    return () => window.removeEventListener("homequest:live", onLive)
+    propertiesApi.getAll({ page: 0, size: 12, sortBy: "createdAt" })
+      .then(res => {
+        const rows = res.content ?? res ?? []
+        if (rows.length > 0) setProperties(rows)
+      })
+      .catch(() => {}) // keep dummy data on failure
   }, [])
 
   const filtered = active === "All"
@@ -95,8 +96,8 @@ export default function FeaturedProperties() {
 }
 
 function PropertyCard({ p, saved, onSave }) {
-  const st = PROPERTY_STATUS[p.status] ?? { bg: "#F5F5F5", color: "#737373", label: p.status }
-  const img = p.imageUrl ?? p.image ?? "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&q=80"
+  const st  = PROPERTY_STATUS[p.status] ?? { bg: "#F5F5F5", color: "#737373", label: p.status }
+  const img = p.imageUrl ?? "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&q=80"
   return (
     <Link
       to={ROUTES.PROPERTY_DETAIL.replace(":id", p.id)}

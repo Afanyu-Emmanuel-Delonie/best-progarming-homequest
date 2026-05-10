@@ -14,6 +14,17 @@ import { ROUTES } from "../../constants/routes"
 import { toast } from "../../components/common/Toast"
 import { propertiesApi } from "../../api/properties.api"
 
+const DUMMY_PROPERTIES = [
+  { id: 1, title: "Modern Apartment in Kiyovu",    type: "APARTMENT",  status: "AVAILABLE",   price: 85000000,  bedrooms: 3, bathrooms: 2, areaSqm: 120, city: "Kigali", imageUrl: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&q=80" },
+  { id: 2, title: "Luxury Villa in Nyarutarama",   type: "VILLA",      status: "AVAILABLE",   price: 320000000, bedrooms: 5, bathrooms: 4, areaSqm: 450, city: "Kigali", imageUrl: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&q=80" },
+  { id: 3, title: "Family House in Kimironko",     type: "HOUSE",      status: "AVAILABLE",   price: 120000000, bedrooms: 4, bathrooms: 3, areaSqm: 220, city: "Kigali", imageUrl: "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=600&q=80" },
+  { id: 4, title: "Studio Apartment in Remera",    type: "APARTMENT",  status: "AVAILABLE",   price: 35000000,  bedrooms: 1, bathrooms: 1, areaSqm: 55,  city: "Kigali", imageUrl: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&q=80" },
+  { id: 5, title: "Commercial Space in CBD",       type: "COMMERCIAL", status: "AVAILABLE",   price: 250000000, bedrooms: 0, bathrooms: 2, areaSqm: 380, city: "Kigali", imageUrl: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80" },
+  { id: 6, title: "Penthouse in Gacuriro",         type: "APARTMENT",  status: "UNDER_OFFER", price: 195000000, bedrooms: 4, bathrooms: 3, areaSqm: 280, city: "Kigali", imageUrl: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&q=80" },
+  { id: 7, title: "Townhouse in Kibagabaga",       type: "HOUSE",      status: "AVAILABLE",   price: 95000000,  bedrooms: 3, bathrooms: 2, areaSqm: 180, city: "Kigali", imageUrl: "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=600&q=80" },
+  { id: 8, title: "Office Space in Kacyiru",       type: "COMMERCIAL", status: "AVAILABLE",   price: 180000000, bedrooms: 0, bathrooms: 3, areaSqm: 300, city: "Kigali", imageUrl: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=600&q=80" },
+]
+
 const TYPE_TABS = ["All", ...Object.keys(PROPERTY_TYPE_LABELS)]
 
 const inputBase = {
@@ -25,7 +36,7 @@ const inputBase = {
 
 export default function PropertiesPage() {
   const [searchParams]          = useSearchParams()
-  const [properties, setProperties] = useState([])
+  const [properties, setProperties] = useState(DUMMY_PROPERTIES)
   const [loading, setLoading]   = useState(true)
   const [query,    setQuery]    = useState(searchParams.get("q") || "")
   const [type,     setType]     = useState(searchParams.get("type") || "All")
@@ -36,7 +47,10 @@ export default function PropertiesPage() {
   const loadProperties = () => {
     setLoading(true)
     propertiesApi.getAll({ page: 0, size: 100, sortBy: "createdAt" })
-      .then(res => setProperties(res.content ?? res ?? []))
+      .then(res => {
+        const rows = res.content ?? res ?? []
+        if (rows.length > 0) setProperties(rows)
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
   }

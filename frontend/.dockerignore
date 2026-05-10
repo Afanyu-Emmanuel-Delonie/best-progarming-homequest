@@ -1,7 +1,14 @@
 node_modules
+**/node_modules
 dist
+**/dist
+.vite
+**/.vite
 .git
 .github
 .history
 .env
 *.log
+README.md
+vercel.json
+eslint.config.js
