@@ -2,6 +2,13 @@ import { useState, useEffect } from "react"
 import { Star, Phone, Building2, X, Share2, Link2, MessageCircle, MapPin, UserRound, Loader2 } from "lucide-react"
 import { agentsApi } from "../../api/agents.api"
 
+const DUMMY_AGENTS = [
+  { id: 1, firstName: "Jean",    lastName: "Habimana",  companyName: "HomeQuest Realty", phone: "+250 788 000 001", licenseNumber: "LIC-001", rating: 4.9, listings: 12, location: "Kigali", profileImage: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&q=80",  bio: "Specialising in luxury residential properties across Kigali with over 8 years of experience." },
+  { id: 2, firstName: "Amina",   lastName: "Uwimana",   companyName: "Prime Properties",  phone: "+250 788 000 002", licenseNumber: "LIC-002", rating: 4.8, listings: 9,  location: "Kigali", profileImage: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80", bio: "Expert in commercial real estate and investment properties throughout Rwanda." },
+  { id: 3, firstName: "Patrick", lastName: "Nkurunziza", companyName: "HomeQuest Realty", phone: "+250 788 000 003", licenseNumber: "LIC-003", rating: 4.7, listings: 15, location: "Kigali", profileImage: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80", bio: "Helping families find their dream homes in Kigali's best neighbourhoods since 2016." },
+  { id: 4, firstName: "Grace",   lastName: "Mukamana",  companyName: "Prime Properties",  phone: "+250 788 000 004", licenseNumber: "LIC-004", rating: 4.9, listings: 11, location: "Kigali", profileImage: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&q=80",  bio: "Award-winning agent focused on first-time buyers and affordable housing solutions." },
+]
+
 function AgentCard({ a, onClick }) {
   const [hovered, setHovered] = useState(false)
 
@@ -60,18 +67,17 @@ function AgentCard({ a, onClick }) {
 }
 
 export default function TopAgents() {
-  const [agents, setAgents]   = useState([])
-  const [loading, setLoading] = useState(true)
+  const [agents, setAgents]     = useState(DUMMY_AGENTS)
+  const [loading, setLoading]   = useState(false)
   const [selected, setSelected] = useState(null)
-  const agent = agents.find((a) => a.id === selected)
+  const agent  = agents.find((a) => a.id === selected)
   const social = agent?.social ?? { twitter: "#", linkedin: "#", instagram: "#" }
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
     agentsApi.getTop(8)
-      .then((rows) => { if (!cancelled) setAgents(Array.isArray(rows) ? rows : []) })
-      .catch(() => { if (!cancelled) setAgents([]) })
+      .then((rows) => { if (!cancelled && Array.isArray(rows) && rows.length > 0) setAgents(rows) })
+      .catch(() => {}) // keep dummy data on failure
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [])
