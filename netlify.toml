@@ -1,0 +1,2 @@
+# Netlify config lives in frontend/netlify.toml
+# UI settings: Base directory = frontend, Publish directory = frontend/dist
