@@ -50,6 +50,21 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DataSeeder implements ApplicationRunner {
 
+    /* Unsplash — hotlink-friendly demo assets (no API key). */
+    private static final String IMG_APT        = "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&q=80";
+    private static final String IMG_APT2     = "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&q=80";
+    private static final String IMG_PENT     = "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&q=80";
+    private static final String IMG_VILLA    = "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80";
+    private static final String IMG_VILLA2   = "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&q=80";
+    private static final String IMG_HOUSE    = "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=1200&q=80";
+    private static final String IMG_HOUSE2   = "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=1200&q=80";
+    private static final String IMG_OFFICE   = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80";
+    private static final String IMG_OFFICE2  = "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80";
+    private static final String IMG_LAND     = "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200&q=80";
+    private static final String IMG_RETAIL   = "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&q=80";
+    private static final String IMG_AGENT_F  = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&q=80";
+    private static final String IMG_AGENT_M  = "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=600&q=80";
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AgentRepository agentRepository;
@@ -65,6 +80,16 @@ public class DataSeeder implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
+        // Patch any PENDING agents to ACTIVE (fixes legacy data)
+        List<Agent> pendingAgents = agentRepository.findByStatus(AgentStatus.PENDING);
+        if (!pendingAgents.isEmpty()) {
+            pendingAgents.forEach(a -> a.setStatus(AgentStatus.ACTIVE));
+            agentRepository.saveAll(pendingAgents);
+            log.info("Patched {} PENDING agent(s) to ACTIVE.", pendingAgents.size());
+        }
+
+        seedLocations();
+
         if (userRepository.count() > 0) {
             log.info("Database already seeded — skipping.");
             return;
@@ -73,25 +98,50 @@ public class DataSeeder implements ApplicationRunner {
         log.info("Seeding database...");
 
         // ── 1. LOCATIONS ──────────────────────────────────────────────
-        Location country = locationRepository.save(Location.builder()
-                .code("RW").name("Rwanda").type(LocationType.COUNTRY).build());
+        Location country = saveLocation("RW", "Rwanda", LocationType.COUNTRY, null);
 
-        Location kigali = locationRepository.save(Location.builder()
-                .code("RW-KGL").name("Kigali City").type(LocationType.PROVINCE).parent(country).build());
+        Location kigali = saveLocation("RW-KGL", "Kigali City", LocationType.PROVINCE, country);
+        Location northern = saveLocation("RW-NOR", "Northern Province", LocationType.PROVINCE, country);
+        Location southern = saveLocation("RW-SOU", "Southern Province", LocationType.PROVINCE, country);
+        Location western = saveLocation("RW-WES", "Western Province", LocationType.PROVINCE, country);
+        Location eastern = saveLocation("RW-EAS", "Eastern Province", LocationType.PROVINCE, country);
 
-        Location gasabo = locationRepository.save(Location.builder()
-                .code("RW-KGL-GSB").name("Gasabo").type(LocationType.DISTRICT).parent(kigali).build());
+        Location gasabo = saveLocation("RW-KGL-GSB", "Gasabo", LocationType.DISTRICT, kigali);
+        Location nyarugenge = saveLocation("RW-KGL-NYR", "Nyarugenge", LocationType.DISTRICT, kigali);
+        Location kicukiro = saveLocation("RW-KGL-KIC", "Kicukiro", LocationType.DISTRICT, kigali);
+        Location musanze = saveLocation("RW-NOR-MSZ", "Musanze", LocationType.DISTRICT, northern);
+        Location huye = saveLocation("RW-SOU-HUY", "Huye", LocationType.DISTRICT, southern);
+        Location rusizi = saveLocation("RW-WES-RZI", "Rusizi", LocationType.DISTRICT, western);
+        Location nyagatare = saveLocation("RW-EAS-NYT", "Nyagatare", LocationType.DISTRICT, eastern);
 
-        Location nyarugenge = locationRepository.save(Location.builder()
-                .code("RW-KGL-NYR").name("Nyarugenge").type(LocationType.DISTRICT).parent(kigali).build());
+        Location remera = saveLocation("RW-KGL-GSB-REM", "Remera", LocationType.SECTOR, gasabo);
+        Location kacyiru = saveLocation("RW-KGL-GSB-KCY", "Kacyiru", LocationType.SECTOR, gasabo);
+        Location gitega = saveLocation("RW-KGL-NYR-GTG", "Gitega", LocationType.SECTOR, nyarugenge);
+        Location kanombe = saveLocation("RW-KGL-KIC-KNB", "Kanombe", LocationType.SECTOR, kicukiro);
+        Location muhoza = saveLocation("RW-NOR-MSZ-MHZ", "Muhoza", LocationType.SECTOR, musanze);
+        Location butare = saveLocation("RW-SOU-HUY-BTR", "Tumba", LocationType.SECTOR, huye);
+        Location kamembe = saveLocation("RW-WES-RZI-KMB", "Kamembe", LocationType.SECTOR, rusizi);
+        Location tabagwe = saveLocation("RW-EAS-NYT-TBG", "Tabagwe", LocationType.SECTOR, nyagatare);
 
-        Location northern = locationRepository.save(Location.builder()
-                .code("RW-NOR").name("Northern Province").type(LocationType.PROVINCE).parent(country).build());
+        Location rukiriCell = saveLocation("RW-KGL-GSB-REM-01", "Rukiri I", LocationType.CELL, remera);
+        Location kamatamuCell = saveLocation("RW-KGL-GSB-KCY-01", "Kamatamu", LocationType.CELL, kacyiru);
+        Location rwezamenyoCell = saveLocation("RW-KGL-NYR-GTG-01", "Rwezamenyo", LocationType.CELL, gitega);
+        Location kibagabagaCell = saveLocation("RW-KGL-KIC-KNB-01", "Kibagabaga", LocationType.CELL, kanombe);
+        Location cyabagaruraCell = saveLocation("RW-NOR-MSZ-MHZ-01", "Cyabagarura", LocationType.CELL, muhoza);
+        Location butareCell = saveLocation("RW-SOU-HUY-BTR-01", "Butare", LocationType.CELL, butare);
+        Location gikundamvuraCell = saveLocation("RW-WES-RZI-KMB-01", "Gikundamvura", LocationType.CELL, kamembe);
+        Location bushogaCell = saveLocation("RW-EAS-NYT-TBG-01", "Bushoga", LocationType.CELL, tabagwe);
 
-        Location musanze = locationRepository.save(Location.builder()
-                .code("RW-NOR-MSZ").name("Musanze").type(LocationType.DISTRICT).parent(northern).build());
+        saveLocation("RW-KGL-GSB-REM-01-V1", "Rukiri I", LocationType.VILLAGE, rukiriCell);
+        saveLocation("RW-KGL-GSB-KCY-01-V1", "Ruyenzi", LocationType.VILLAGE, kamatamuCell);
+        saveLocation("RW-KGL-NYR-GTG-01-V1", "Kimisagara", LocationType.VILLAGE, rwezamenyoCell);
+        saveLocation("RW-KGL-KIC-KNB-01-V1", "Nyarutarama", LocationType.VILLAGE, kibagabagaCell);
+        saveLocation("RW-NOR-MSZ-MHZ-01-V1", "Gacaca", LocationType.VILLAGE, cyabagaruraCell);
+        saveLocation("RW-SOU-HUY-BTR-01-V1", "Nyabihu", LocationType.VILLAGE, butareCell);
+        saveLocation("RW-WES-RZI-KMB-01-V1", "Nyundo", LocationType.VILLAGE, gikundamvuraCell);
+        saveLocation("RW-EAS-NYT-TBG-01-V1", "Kageyo", LocationType.VILLAGE, bushogaCell);
 
-        log.info("Locations seeded.");
+        log.info("Locations seeded: 5 provinces, 7 districts, 8 sectors, 8 cells, and 8 villages.");
 
         // ── 2. COMPANY ────────────────────────────────────────────────
         Company company = companyRepository.save(new Company());
@@ -99,38 +149,27 @@ public class DataSeeder implements ApplicationRunner {
         log.info("Company seeded with id={}", companyId);
 
         // ── 3. AUTH USERS ─────────────────────────────────────────────
-        User adminUser = saveUser("John", "Admin", "admin@homequest.rw", "Admin@1234", Role.ROLE_COMPANY_ADMIN);
-        User managerUser = saveUser("Jane", "Manager", "manager@homequest.rw", "Manager@1234", Role.ROLE_MANAGER);
-        User agent1User = saveUser("Alice", "Uwase", "alice@homequest.rw", "Agent@1234", Role.ROLE_AGENT);
-        User agent2User = saveUser("Bob", "Mugisha", "bob@homequest.rw", "Agent@1234", Role.ROLE_AGENT);
-        User ownerUser = saveUser("Eric", "Nkurunziza", "owner@homequest.rw", "Owner@1234", Role.ROLE_OWNER);
-        User clientUser = saveUser("Marie", "Ingabire", "client@homequest.rw", "Client@1234", Role.ROLE_CLIENT);
+        User adminUser  = saveUser("John",  "Admin",      "admin@homequest.rw",  "Admin@1234",  Role.ROLE_ADMIN);
+        User agent1User = saveUser("Alice", "Uwase",      "alice@homequest.rw",  "Agent@1234",  Role.ROLE_AGENT);
+        User agent2User = saveUser("Bob",   "Mugisha",    "bob@homequest.rw",    "Agent@1234",  Role.ROLE_AGENT);
+        User ownerUser  = saveUser("Eric",  "Nkurunziza", "owner@homequest.rw",  "Owner@1234",  Role.ROLE_OWNER);
+        User clientUser = saveUser("Marie", "Ingabire",   "client@homequest.rw", "Client@1234", Role.ROLE_CUSTOMER);
 
         log.info("Auth users seeded.");
 
         // ── 4. PROFILES ───────────────────────────────────────────────
-        Agent admin = agentRepository.save(Agent.builder()
-                .userPublicId(adminUser.getPublicId().toString())
-                .firstName("John").lastName("Admin")
-                .phone("+250780000001").licenseNumber("LIC-ADMIN-001")
-                .companyId(companyId).status(AgentStatus.ACTIVE).build());
-
-        Agent manager = agentRepository.save(Agent.builder()
-                .userPublicId(managerUser.getPublicId().toString())
-                .firstName("Jane").lastName("Manager")
-                .phone("+250780000002").licenseNumber("LIC-MGR-001")
-                .companyId(companyId).status(AgentStatus.ACTIVE).build());
-
         Agent alice = agentRepository.save(Agent.builder()
                 .userPublicId(agent1User.getPublicId().toString())
                 .firstName("Alice").lastName("Uwase")
-                .phone("+250780000003").licenseNumber("LIC-AGT-001")
+                .phone("+250780000002").licenseNumber("LIC-AGT-001")
+                .profileImage(IMG_AGENT_F)
                 .companyId(companyId).status(AgentStatus.ACTIVE).build());
 
         Agent bob = agentRepository.save(Agent.builder()
                 .userPublicId(agent2User.getPublicId().toString())
                 .firstName("Bob").lastName("Mugisha")
-                .phone("+250780000004").licenseNumber("LIC-AGT-002")
+                .phone("+250780000003").licenseNumber("LIC-AGT-002")
+                .profileImage(IMG_AGENT_M)
                 .companyId(companyId).status(AgentStatus.ACTIVE).build());
 
         Owner owner = ownerRepository.save(Owner.builder()
@@ -141,7 +180,9 @@ public class DataSeeder implements ApplicationRunner {
         Client client = clientRepository.save(Client.builder()
                 .userPublicId(clientUser.getPublicId().toString())
                 .firstName("Marie").lastName("Ingabire")
-                .phone("+250780000006").build());
+                .phone("+250780000006")
+                .companyId(companyId)
+                .build());
 
         log.info("Profiles seeded.");
 
@@ -157,6 +198,7 @@ public class DataSeeder implements ApplicationRunner {
                 .locationCode(gasabo.getCode())
                 .listingAgentPublicId(alice.getUserPublicId())
                 .ownerPublicId(owner.getUserPublicId())
+                .imageUrl(IMG_APT)
                 .companyId(companyId).build());
 
         Property prop2 = propertyRepository.save(Property.builder()
@@ -170,6 +212,7 @@ public class DataSeeder implements ApplicationRunner {
                 .locationCode(nyarugenge.getCode())
                 .listingAgentPublicId(alice.getUserPublicId())
                 .ownerPublicId(owner.getUserPublicId())
+                .imageUrl(IMG_VILLA)
                 .companyId(companyId).build());
 
         Property prop3 = propertyRepository.save(Property.builder()
@@ -184,6 +227,7 @@ public class DataSeeder implements ApplicationRunner {
                 .listingAgentPublicId(bob.getUserPublicId())
                 .sellingAgentPublicId(alice.getUserPublicId())
                 .ownerPublicId(owner.getUserPublicId())
+                .imageUrl(IMG_OFFICE)
                 .companyId(companyId).build());
 
         Property prop4 = propertyRepository.save(Property.builder()
@@ -199,6 +243,105 @@ public class DataSeeder implements ApplicationRunner {
                 .sellingAgentPublicId(bob.getUserPublicId())
                 .ownerPublicId(owner.getUserPublicId())
                 .buyerPublicId(clientUser.getPublicId().toString())
+                .imageUrl(IMG_HOUSE)
+                .companyId(companyId).build());
+
+        propertyRepository.save(Property.builder()
+                .title("Skyline Penthouse in Nyarugenge")
+                .description("Top-floor residence with wraparound terrace and city views.")
+                .price(new BigDecimal("285000.00"))
+                .listingPrice(new BigDecimal("285000.00"))
+                .address("KN 12 Ave").city("Kigali").country("Rwanda")
+                .bedrooms(3).bathrooms(3).areaSqm(new BigDecimal("195.00"))
+                .type(PropertyType.APARTMENT).status(PropertyStatus.AVAILABLE)
+                .locationCode(nyarugenge.getCode())
+                .listingAgentPublicId(alice.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .imageUrl(IMG_PENT)
+                .companyId(companyId).build());
+
+        propertyRepository.save(Property.builder()
+                .title("Lakeside Villa — Rubavu")
+                .description("Large windows, garden, and easy access to Lake Kivu.")
+                .price(new BigDecimal("410000.00"))
+                .listingPrice(new BigDecimal("410000.00"))
+                .address("Lake Rd 4").city("Rubavu").country("Rwanda")
+                .bedrooms(4).bathrooms(3).areaSqm(new BigDecimal("360.00"))
+                .type(PropertyType.VILLA).status(PropertyStatus.AVAILABLE)
+                .locationCode(musanze.getCode())
+                .listingAgentPublicId(bob.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .imageUrl(IMG_VILLA2)
+                .companyId(companyId).build());
+
+        propertyRepository.save(Property.builder()
+                .title("Studio Loft in Gasabo")
+                .description("Ideal for young professionals — high ceilings and modern kitchen.")
+                .price(new BigDecimal("68000.00"))
+                .listingPrice(new BigDecimal("68000.00"))
+                .address("KG 200 St").city("Kigali").country("Rwanda")
+                .bedrooms(1).bathrooms(1).areaSqm(new BigDecimal("52.00"))
+                .type(PropertyType.APARTMENT).status(PropertyStatus.AVAILABLE)
+                .locationCode(gasabo.getCode())
+                .listingAgentPublicId(alice.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .imageUrl(IMG_APT2)
+                .companyId(companyId).build());
+
+        propertyRepository.save(Property.builder()
+                .title("Retail Corner Unit — CBD")
+                .description("Corner visibility, high foot traffic, ready for fit-out.")
+                .price(new BigDecimal("142000.00"))
+                .listingPrice(new BigDecimal("142000.00"))
+                .address("KN 3 St").city("Kigali").country("Rwanda")
+                .bedrooms(0).bathrooms(2).areaSqm(new BigDecimal("165.00"))
+                .type(PropertyType.COMMERCIAL).status(PropertyStatus.AVAILABLE)
+                .locationCode(nyarugenge.getCode())
+                .listingAgentPublicId(bob.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .imageUrl(IMG_RETAIL)
+                .companyId(companyId).build());
+
+        propertyRepository.save(Property.builder()
+                .title("Development Land — Musanze")
+                .description("Level plot with road frontage; suitable for residential or hospitality.")
+                .price(new BigDecimal("95000.00"))
+                .listingPrice(new BigDecimal("95000.00"))
+                .address("NR 501").city("Musanze").country("Rwanda")
+                .bedrooms(0).bathrooms(0).areaSqm(new BigDecimal("2500.00"))
+                .type(PropertyType.LAND).status(PropertyStatus.AVAILABLE)
+                .locationCode(musanze.getCode())
+                .listingAgentPublicId(bob.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .imageUrl(IMG_LAND)
+                .companyId(companyId).build());
+
+        propertyRepository.save(Property.builder()
+                .title("Townhouse with Rooftop — Gasabo")
+                .description("Four bedrooms, garage, and rooftop terrace for entertaining.")
+                .price(new BigDecimal("198000.00"))
+                .listingPrice(new BigDecimal("198000.00"))
+                .address("KG 45 St").city("Kigali").country("Rwanda")
+                .bedrooms(4).bathrooms(3).areaSqm(new BigDecimal("220.00"))
+                .type(PropertyType.HOUSE).status(PropertyStatus.AVAILABLE)
+                .locationCode(gasabo.getCode())
+                .listingAgentPublicId(alice.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .imageUrl(IMG_HOUSE2)
+                .companyId(companyId).build());
+
+        propertyRepository.save(Property.builder()
+                .title("Corporate HQ Floors — Nyarugenge")
+                .description("Two contiguous floors, raised floors, backup power.")
+                .price(new BigDecimal("265000.00"))
+                .listingPrice(new BigDecimal("265000.00"))
+                .address("KN 88 Ave").city("Kigali").country("Rwanda")
+                .bedrooms(0).bathrooms(6).areaSqm(new BigDecimal("890.00"))
+                .type(PropertyType.OFFICE).status(PropertyStatus.AVAILABLE)
+                .locationCode(nyarugenge.getCode())
+                .listingAgentPublicId(bob.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .imageUrl(IMG_OFFICE2)
                 .companyId(companyId).build());
 
         log.info("Properties seeded.");
@@ -289,15 +432,54 @@ public class DataSeeder implements ApplicationRunner {
 
         log.info("Transaction and commissions seeded.");
         log.info("✅ Database seeding complete.");
-        log.info("──────────────────────────────────────────");
-        log.info("Test credentials:");
-        log.info("  Company Admin : admin@homequest.rw   / Admin@1234");
-        log.info("  Manager       : manager@homequest.rw / Manager@1234");
-        log.info("  Agent Alice   : alice@homequest.rw   / Agent@1234");
-        log.info("  Agent Bob     : bob@homequest.rw     / Agent@1234");
-        log.info("  Owner         : owner@homequest.rw   / Owner@1234");
-        log.info("  Client        : client@homequest.rw  / Client@1234");
-        log.info("──────────────────────────────────────────");
+        log.info("Test accounts seeded — check application.properties or README for credentials.");
+    }
+
+    private void seedLocations() {
+        Location country = saveLocation("RW", "Rwanda", LocationType.COUNTRY, null);
+
+        Location kigali = saveLocation("RW-KGL", "Kigali City", LocationType.PROVINCE, country);
+        Location northern = saveLocation("RW-NOR", "Northern Province", LocationType.PROVINCE, country);
+        Location southern = saveLocation("RW-SOU", "Southern Province", LocationType.PROVINCE, country);
+        Location western = saveLocation("RW-WES", "Western Province", LocationType.PROVINCE, country);
+        Location eastern = saveLocation("RW-EAS", "Eastern Province", LocationType.PROVINCE, country);
+
+        Location gasabo = saveLocation("RW-KGL-GSB", "Gasabo", LocationType.DISTRICT, kigali);
+        Location nyarugenge = saveLocation("RW-KGL-NYR", "Nyarugenge", LocationType.DISTRICT, kigali);
+        Location kicukiro = saveLocation("RW-KGL-KIC", "Kicukiro", LocationType.DISTRICT, kigali);
+        Location musanze = saveLocation("RW-NOR-MSZ", "Musanze", LocationType.DISTRICT, northern);
+        Location huye = saveLocation("RW-SOU-HUY", "Huye", LocationType.DISTRICT, southern);
+        Location rusizi = saveLocation("RW-WES-RZI", "Rusizi", LocationType.DISTRICT, western);
+        Location nyagatare = saveLocation("RW-EAS-NYT", "Nyagatare", LocationType.DISTRICT, eastern);
+
+        Location remera = saveLocation("RW-KGL-GSB-REM", "Remera", LocationType.SECTOR, gasabo);
+        Location kacyiru = saveLocation("RW-KGL-GSB-KCY", "Kacyiru", LocationType.SECTOR, gasabo);
+        Location gitega = saveLocation("RW-KGL-NYR-GTG", "Gitega", LocationType.SECTOR, nyarugenge);
+        Location kanombe = saveLocation("RW-KGL-KIC-KNB", "Kanombe", LocationType.SECTOR, kicukiro);
+        Location muhoza = saveLocation("RW-NOR-MSZ-MHZ", "Muhoza", LocationType.SECTOR, musanze);
+        Location tumba = saveLocation("RW-SOU-HUY-TMB", "Tumba", LocationType.SECTOR, huye);
+        Location kamembe = saveLocation("RW-WES-RZI-KMB", "Kamembe", LocationType.SECTOR, rusizi);
+        Location tabagwe = saveLocation("RW-EAS-NYT-TBG", "Tabagwe", LocationType.SECTOR, nyagatare);
+
+        Location rukiriCell = saveLocation("RW-KGL-GSB-REM-01", "Rukiri I", LocationType.CELL, remera);
+        Location kamatamuCell = saveLocation("RW-KGL-GSB-KCY-01", "Kamatamu", LocationType.CELL, kacyiru);
+        Location rwezamenyoCell = saveLocation("RW-KGL-NYR-GTG-01", "Rwezamenyo", LocationType.CELL, gitega);
+        Location kibagabagaCell = saveLocation("RW-KGL-KIC-KNB-01", "Kibagabaga", LocationType.CELL, kanombe);
+        Location cyabagaruraCell = saveLocation("RW-NOR-MSZ-MHZ-01", "Cyabagarura", LocationType.CELL, muhoza);
+        Location butareCell = saveLocation("RW-SOU-HUY-TMB-01", "Butare", LocationType.CELL, tumba);
+        Location gikundamvuraCell = saveLocation("RW-WES-RZI-KMB-01", "Gikundamvura", LocationType.CELL, kamembe);
+        Location bushogaCell = saveLocation("RW-EAS-NYT-TBG-01", "Bushoga", LocationType.CELL, tabagwe);
+
+        saveLocation("RW-KGL-GSB-REM-01-V1", "Rukiri I", LocationType.VILLAGE, rukiriCell);
+        saveLocation("RW-KGL-GSB-KCY-01-V1", "Ruyenzi", LocationType.VILLAGE, kamatamuCell);
+        saveLocation("RW-KGL-NYR-GTG-01-V1", "Kimisagara", LocationType.VILLAGE, rwezamenyoCell);
+        saveLocation("RW-KGL-KIC-KNB-01-V1", "Nyarutarama", LocationType.VILLAGE, kibagabagaCell);
+        saveLocation("RW-NOR-MSZ-MHZ-01-V1", "Gacaca", LocationType.VILLAGE, cyabagaruraCell);
+        saveLocation("RW-SOU-HUY-TMB-01-V1", "Nyabihu", LocationType.VILLAGE, butareCell);
+        saveLocation("RW-WES-RZI-KMB-01-V1", "Nyundo", LocationType.VILLAGE, gikundamvuraCell);
+        saveLocation("RW-EAS-NYT-TBG-01-V1", "Kageyo", LocationType.VILLAGE, bushogaCell);
+
+        log.info("Locations seeded: country, 5 provinces, 7 districts, 8 sectors, 8 cells, and 8 villages.");
     }
 
     private User saveUser(String firstName, String lastName, String email, String password, Role role) {
@@ -309,5 +491,21 @@ public class DataSeeder implements ApplicationRunner {
                 .role(role)
                 .isActive(true)
                 .build());
+    }
+
+    private Location saveLocation(String code, String name, LocationType type, Location parent) {
+        return locationRepository.findByCode(code)
+                .map(existing -> {
+                    existing.setName(name);
+                    existing.setType(type);
+                    existing.setParent(parent);
+                    return locationRepository.save(existing);
+                })
+                .orElseGet(() -> locationRepository.save(Location.builder()
+                        .code(code)
+                        .name(name)
+                        .type(type)
+                        .parent(parent)
+                        .build()));
     }
 }

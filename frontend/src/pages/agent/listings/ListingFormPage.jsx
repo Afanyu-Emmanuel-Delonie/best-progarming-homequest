@@ -1,1 +1,318 @@
-export default function ListingFormPage() {}
+import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import { ArrowLeft, Home, Loader2, Search, X } from "lucide-react"
+import { PROPERTY_TYPE_LABELS, PROPERTY_STATUS } from "../../../constants/enums"
+import { ROUTES } from "../../../constants/routes"
+import { useLocationPicker } from "../../../hooks/useLocation"
+import LocationFields from "../../../components/shared/LocationFields"
+import ImageUpload from "../../../components/shared/ImageUpload"
+import { propertiesApi } from "../../../api/properties.api"
+import { ownerApi } from "../../../api/owner.api"
+import { toast } from "react-toastify"
+
+const EMPTY = {
+  title: "", address: "",
+  price: "", type: "APARTMENT", status: "AVAILABLE",
+  bedrooms: "", bathrooms: "", areaSqm: "", description: "",
+}
+
+// ── Owner Picker ───────────────────────────────────────────────────────────
+function OwnerPicker({ value, onChange }) {
+  const [mode, setMode]         = useState("system") // "system" | "custom"
+  const [owners, setOwners]     = useState([])
+  const [search, setSearch]     = useState("")
+  const [selected, setSelected] = useState(null)
+  const [customId, setCustomId] = useState("")
+
+  useEffect(() => {
+    ownerApi.getAll().then(setOwners).catch(() => {})
+  }, [])
+
+  const filtered = owners.filter(o =>
+    search.trim() === "" ||
+    `${o.firstName} ${o.lastName}`.toLowerCase().includes(search.toLowerCase()) ||
+    o.phone?.includes(search)
+  )
+
+  const select = (owner) => {
+    setSelected(owner)
+    onChange(owner.userPublicId)
+    setSearch("")
+  }
+
+  const clear = () => {
+    setSelected(null)
+    onChange("")
+  }
+
+  const switchMode = (m) => {
+    setMode(m)
+    setSelected(null)
+    setCustomId("")
+    onChange("")
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+      {/* Mode toggle */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+        {[{ key: "system", label: "Select from system" }, { key: "custom", label: "Enter manually" }].map(opt => (
+          <button key={opt.key} type="button" onClick={() => switchMode(opt.key)} style={{
+            padding: "0.5rem", borderRadius: "8px", cursor: "pointer", fontFamily: "inherit",
+            fontWeight: 600, fontSize: "0.8rem", border: "1.5px solid",
+            borderColor: mode === opt.key ? "var(--color-primary)" : "var(--color-border)",
+            backgroundColor: mode === opt.key ? "#FFF5F0" : "var(--color-bg-muted)",
+            color: mode === opt.key ? "var(--color-primary)" : "var(--color-text-muted)",
+          }}>
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      {mode === "system" ? (
+        selected ? (
+          // Selected owner chip
+          <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", padding: "0.6rem 0.875rem", borderRadius: "9px", border: "1.5px solid var(--color-primary)", backgroundColor: "#FFF5F0" }}>
+            <div style={{ width: 30, height: 30, borderRadius: "50%", backgroundColor: "var(--color-primary)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.72rem", fontWeight: 700, flexShrink: 0 }}>
+              {selected.firstName[0]}{selected.lastName[0]}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ margin: 0, fontWeight: 600, fontSize: "0.875rem", color: "var(--color-text)" }}>{selected.firstName} {selected.lastName}</p>
+              {selected.phone && <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--color-text-muted)" }}>{selected.phone}</p>}
+            </div>
+            <button type="button" onClick={clear} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text-muted)", display: "flex" }}>
+              <X size={15} />
+            </button>
+          </div>
+        ) : (
+          <div style={{ position: "relative" }}>
+            <Search size={14} style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)", pointerEvents: "none" }} />
+            <input
+              style={{ ...inputStyle, paddingLeft: "2.25rem" }}
+              placeholder="Search by name or phone…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            {search.trim() && (
+              <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, backgroundColor: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "9px", boxShadow: "0 8px 24px #0000001a", zIndex: 20, maxHeight: 200, overflowY: "auto" }}>
+                {filtered.length === 0 ? (
+                  <p style={{ margin: 0, padding: "0.75rem 1rem", fontSize: "0.8125rem", color: "var(--color-text-muted)" }}>No owners found</p>
+                ) : filtered.map(o => (
+                  <button key={o.userPublicId} type="button" onClick={() => select(o)}
+                    style={{ display: "flex", alignItems: "center", gap: "0.65rem", width: "100%", padding: "0.6rem 1rem", border: "none", background: "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit" }}
+                  >
+                    <div style={{ width: 28, height: 28, borderRadius: "50%", backgroundColor: "var(--color-primary)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.68rem", fontWeight: 700, flexShrink: 0 }}>
+                      {o.firstName[0]}{o.lastName[0]}
+                    </div>
+                    <div>
+                      <p style={{ margin: 0, fontWeight: 600, fontSize: "0.8375rem", color: "var(--color-text)" }}>{o.firstName} {o.lastName}</p>
+                      {o.phone && <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--color-text-muted)" }}>{o.phone}</p>}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      ) : (
+        <input
+          style={inputStyle}
+          placeholder="Paste owner public ID (UUID)"
+          value={customId}
+          onChange={e => { setCustomId(e.target.value); onChange(e.target.value.trim()) }}
+        />
+      )}
+    </div>
+  )
+}
+
+const inputStyle = {
+  padding: "0.6rem 0.9rem", borderRadius: "9px", border: "1px solid var(--color-border)",
+  backgroundColor: "var(--color-bg-muted)", fontSize: "0.875rem", color: "var(--color-text)",
+  outline: "none", fontFamily: "inherit", width: "100%", boxSizing: "border-box",
+}
+
+function Field({ label, error, children }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+      <label style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</label>
+      {children}
+      {error && <span style={{ fontSize: "0.72rem", color: "#B91C1C" }}>{error}</span>}
+    </div>
+  )
+}
+
+function Section({ label, children }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+      <p style={{ margin: 0, fontWeight: 700, fontSize: "0.8125rem", color: "var(--color-text)" }}>{label}</p>
+      {children}
+    </div>
+  )
+}
+
+function Divider() {
+  return <div style={{ height: 1, backgroundColor: "var(--color-border)" }} />
+}
+
+export default function ListingFormPage() {
+  const navigate    = useNavigate()
+  const [form, setForm]     = useState({ title: "", address: "", price: "", type: "APARTMENT", status: "AVAILABLE", bedrooms: "", bathrooms: "", areaSqm: "", description: "", ownerPublicId: "" })
+  const [image, setImage]   = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState({})
+
+  const { location, provinces, districts, sectors, cells, villages, pick } = useLocationPicker()
+
+  const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: "" })) }
+
+  const validate = () => {
+    const e = {}
+    if (!form.title.trim())       e.title       = "Required"
+    if (!form.address.trim())     e.address     = "Required"
+    if (!form.description.trim()) e.description = "Required"
+    if (!location.provinceCode)   e.province    = "Required"
+    if (!location.districtCode)   e.district    = "Required"
+    if (!location.cellCode)       e.cell        = "Required"
+    if (!location.villageCode)    e.village     = "Required"
+    if (!form.price || isNaN(Number(form.price)) || Number(form.price) <= 0) e.price = "Enter a valid price"
+    if (form.bathrooms === "" || isNaN(Number(form.bathrooms))) e.bathrooms = "Required"
+    if (form.areaSqm   === "" || isNaN(Number(form.areaSqm)))  e.areaSqm   = "Required"
+    return e
+  }
+
+  const handleSubmit = async () => {
+    const e = validate()
+    if (Object.keys(e).length) { setErrors(e); return }
+    setLoading(true)
+    try {
+      const locationCode = location.villageCode || location.cellCode || location.sectorCode || location.districtCode || location.provinceCode
+      await propertiesApi.create({
+        title:       form.title,
+        description: form.description,
+        address:     form.address,
+        city:        location.districtCode ?? "",
+        country:     "Rwanda",
+        price:       Number(form.price),
+        type:        form.type,
+        bedrooms:    Number(form.bedrooms) || 0,
+        bathrooms:   Number(form.bathrooms),
+        areaSqm:     Number(form.areaSqm),
+        locationCode,
+        ...(form.ownerPublicId && { ownerPublicId: form.ownerPublicId }),
+      })
+      toast.success("Listing created")
+      navigate(ROUTES.AGENT_LISTINGS)
+    } catch (err) {
+      // Surface backend validation errors as field-level errors if available
+      const backendErrors = err?.response?.data?.errors
+      if (Array.isArray(backendErrors) && backendErrors.length) {
+        toast.error(backendErrors.join(" · "))
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", maxWidth: 680, margin: "0 auto" }}>
+
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+        <button onClick={() => navigate(ROUTES.AGENT_LISTINGS)} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, borderRadius: "8px", border: "1px solid var(--color-border)", background: "none", cursor: "pointer", color: "var(--color-text-muted)", flexShrink: 0 }}>
+          <ArrowLeft size={16} />
+        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+          <div style={{ width: 36, height: 36, borderRadius: "9px", backgroundColor: "#FF4F0015", color: "var(--color-primary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Home size={17} />
+          </div>
+          <div>
+            <p style={{ margin: 0, fontWeight: 700, fontSize: "1rem", color: "var(--color-text)" }}>New Listing</p>
+            <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--color-text-muted)" }}>Fill in the property details below</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Form card */}
+      <div style={{ backgroundColor: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "14px", padding: "1.75rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+
+        <Section label="Basic Info">
+          <Field label="Title" error={errors.title}>
+            <input style={inputStyle} value={form.title} onChange={e => set("title", e.target.value)} placeholder="Modern Downtown Apartment" />
+          </Field>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+            <Field label="Type">
+              <select style={inputStyle} value={form.type} onChange={e => set("type", e.target.value)}>
+                {Object.entries(PROPERTY_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </Field>
+            <Field label="Status">
+              <select style={inputStyle} value={form.status} onChange={e => set("status", e.target.value)}>
+                {Object.entries(PROPERTY_STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+              </select>
+            </Field>
+          </div>
+          <Field label="Price (RWF)" error={errors.price}>
+            <input style={inputStyle} type="number" min="0" value={form.price} onChange={e => set("price", e.target.value)} placeholder="485000" />
+          </Field>
+        </Section>
+
+        <Divider />
+
+        <Section label="Location">
+          <Field label="Street Address" error={errors.address}>
+            <input style={inputStyle} value={form.address} onChange={e => set("address", e.target.value)} placeholder="KG 123 St" />
+          </Field>
+          <LocationFields
+            location={location} provinces={provinces} districts={districts}
+            sectors={sectors} cells={cells} villages={villages}
+            pick={pick} errors={errors}
+          />
+        </Section>
+
+        <Divider />
+
+        <Section label="Specifications">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.75rem" }}>
+            <Field label="Bedrooms">
+              <input style={inputStyle} type="number" min="0" value={form.bedrooms} onChange={e => set("bedrooms", e.target.value)} placeholder="2" />
+            </Field>
+            <Field label="Bathrooms" error={errors.bathrooms}>
+              <input style={inputStyle} type="number" min="0" value={form.bathrooms} onChange={e => set("bathrooms", e.target.value)} placeholder="1" />
+            </Field>
+            <Field label="Area (m²)" error={errors.areaSqm}>
+              <input style={inputStyle} type="number" min="0" value={form.areaSqm} onChange={e => set("areaSqm", e.target.value)} placeholder="85" />
+            </Field>
+          </div>
+        </Section>
+
+        <Divider />
+
+        <Section label="Media & Description">
+          <ImageUpload value={image} onChange={setImage} error={errors.image} />
+          <Field label="Description" error={errors.description}>
+            <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 88 }} value={form.description} onChange={e => set("description", e.target.value)} placeholder="Brief description of the property…" />
+          </Field>
+        </Section>
+
+        <Divider />
+
+        <Section label="Property Owner (optional)">
+          <OwnerPicker value={form.ownerPublicId} onChange={v => set("ownerPublicId", v)} />
+        </Section>
+      </div>
+
+      {/* Actions */}
+      <div style={{ display: "flex", gap: "0.65rem", justifyContent: "flex-end" }}>
+        <button onClick={() => navigate(ROUTES.AGENT_LISTINGS)} style={{ padding: "0.6rem 1.25rem", borderRadius: "9px", border: "1px solid var(--color-border)", background: "none", color: "var(--color-text-muted)", fontWeight: 500, fontSize: "0.875rem", cursor: "pointer", fontFamily: "inherit" }}>
+          Cancel
+        </button>
+        <button onClick={handleSubmit} disabled={loading} style={{ padding: "0.6rem 1.5rem", borderRadius: "9px", border: "none", backgroundColor: "var(--color-primary)", color: "#fff", fontWeight: 600, fontSize: "0.875rem", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.75 : 1, fontFamily: "inherit", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+          {loading && <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />}
+          {loading ? "Creating…" : "Create Listing"}
+        </button>
+        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+      </div>
+    </div>
+  )
+}
