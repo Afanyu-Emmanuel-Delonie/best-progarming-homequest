@@ -10,5 +10,5 @@ dist
 .env
 *.log
 README.md
-netlify.toml
+vercel.json
 eslint.config.js
