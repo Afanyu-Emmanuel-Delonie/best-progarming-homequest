@@ -1,18 +1,61 @@
-# React + Vite
+# HomeQuest Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React 19 + Vite frontend for the VZZ Brokerage / HomeQuest platform.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Tech Stack
 
-## React Compiler
+- React 19, Vite
+- Redux Toolkit (state management)
+- React Router (routing + guards)
+- Axios (HTTP client)
+- STOMP / SockJS (real-time updates — stubbed)
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+---
 
-Note: This will impact Vite dev & build performances.
+## Project Structure
 
-## Expanding the ESLint configuration
+```
+frontend/src/
+├── api/          # Axios client and endpoint functions
+├── components/   # Shared UI components
+├── context/      # React context providers
+├── guards/       # Route access control
+├── hooks/        # Custom hooks
+├── layouts/      # Page layout wrappers
+├── pages/        # Route-level page components
+├── store/        # Redux slices
+└── utils/        # Helper functions
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## Setup
+
+```bash
+npm install
+npm run dev       # http://localhost:5173
+```
+
+**Environment** — create `frontend/.env`:
+
+```env
+VITE_API_URL=http://localhost:8080/api/v1
+```
+
+---
+
+## Docker
+
+```bash
+docker compose up --build   # served via Nginx on http://localhost:3000
+```
+
+---
+
+## Notes
+
+- SPA routing is handled by Nginx (`nginx.conf`) and Vite's `vercel.json` / `public/_redirects`.
+- API errors are handled centrally in the Axios client (`src/api/`).
+- Role-based route guards live in `src/guards/`.
