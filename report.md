@@ -20,6 +20,68 @@ The report is organized into four phases that align with the assignment requirem
 3. Dockerization and version control setup
 4. Software testing and verification
 
+## Table of Contents
+
+- [Abstract](#abstract)
+- [1. Introduction](#1-introduction)
+- [2. General Description and Case Study Analysis](#2-general-description-and-case-study-analysis)
+  - [2.1 Case Study Background](#21-case-study-background)
+  - [2.2 General Description of the Proposed System](#22-general-description-of-the-proposed-system)
+  - [2.3 Why the Case Study Needs This System](#23-why-the-case-study-needs-this-system)
+- [3. Problem Faced by the Company](#3-problem-faced-by-the-company)
+  - [3.1 Fragmented Data Management](#31-fragmented-data-management)
+  - [3.2 Poor Operational Visibility](#32-poor-operational-visibility)
+  - [3.3 Manual and Error-Prone Workflow](#33-manual-and-error-prone-workflow)
+  - [3.4 Scaling Challenges](#34-scaling-challenges)
+- [4. Functional Diagram and Internal Working of the Case Study](#4-functional-diagram-and-internal-working-of-the-case-study)
+- [5. Object-Oriented System Analysis and Design](#5-object-oriented-system-analysis-and-design)
+  - [5.1 Use Case Diagram](#51-use-case-diagram)
+  - [5.2 Class Diagram](#52-class-diagram)
+  - [5.3 Activity Diagram](#53-activity-diagram)
+  - [5.4 Sequence Diagram](#54-sequence-diagram)
+  - [5.5 Component Diagram](#55-component-diagram)
+- [6. Prototype Summary](#6-prototype-summary)
+  - [6.1 Purpose of the Prototype](#61-purpose-of-the-prototype)
+  - [6.2 What the Current Prototype Demonstrates](#62-what-the-current-prototype-demonstrates)
+  - [6.3 Best Programming Practices Applied](#63-best-programming-practices-applied)
+  - [6.4 Google Coding Standards Alignment](#64-google-coding-standards-alignment)
+- [7. Design Pattern Used](#7-design-pattern-used)
+  - [7.1 Repository Pattern](#71-repository-pattern)
+  - [7.2 Where It Appears in the Codebase](#72-where-it-appears-in-the-codebase)
+  - [7.3 How the Pattern Supports the System](#73-how-the-pattern-supports-the-system)
+  - [7.4 Why This Pattern Was Chosen](#74-why-this-pattern-was-chosen)
+  - [7.5 Example from the Codebase](#75-example-from-the-codebase)
+- [8. Software Development Prototype and Implementation Notes](#8-software-development-prototype-and-implementation-notes)
+  - [8.1 Backend Prototype Characteristics](#81-backend-prototype-characteristics)
+  - [8.2 Frontend Prototype Characteristics](#82-frontend-prototype-characteristics)
+  - [8.3 Why the Prototype Is Useful](#83-why-the-prototype-is-useful)
+- [9. Dockerization](#9-dockerization)
+  - [9.1 Meaning of Dockerization](#91-meaning-of-dockerization)
+  - [9.2 Dockerization Process](#92-dockerization-process)
+  - [9.3 Docker Support in the Repository](#93-docker-support-in-the-repository)
+  - [9.4 How the Application Is Run in Docker](#94-how-the-application-is-run-in-docker)
+  - [9.5 Why Docker Matters for This Project](#95-why-docker-matters-for-this-project)
+- [10. Version Control System Setup](#10-version-control-system-setup)
+  - [10.1 Version Control Purpose](#101-version-control-purpose)
+  - [10.2 SVN Setup Strategy](#102-svn-setup-strategy)
+  - [10.3 What Should Be Stored in Version Control](#103-what-should-be-stored-in-version-control)
+  - [10.4 What Should Be Ignored](#104-what-should-be-ignored)
+  - [10.5 Why VCS Is Important in This Project](#105-why-vcs-is-important-in-this-project)
+- [11. Software Test Plan](#11-software-test-plan)
+  - [11.1 Test Objective](#111-test-objective)
+  - [11.2 Test Scope](#112-test-scope)
+  - [11.3 Types of Testing](#113-types-of-testing)
+  - [11.4 Sample Test Cases](#114-sample-test-cases)
+  - [11.5 Entry and Exit Criteria](#115-entry-and-exit-criteria)
+- [12. Implementation Evidence from the Codebase](#12-implementation-evidence-from-the-codebase)
+- [13. How to Run the Project](#13-how-to-run-the-project)
+  - [13.1 Backend](#131-backend)
+  - [13.2 Frontend](#132-frontend)
+  - [13.3 Dockerized Run](#133-dockerized-run)
+- [14. Demo Accounts](#14-demo-accounts)
+- [15. Conclusion](#15-conclusion)
+- [16. Notes](#16-notes)
+
 ## 1. Introduction
 
 Modern brokerage operations require more than a simple listing website. A real estate company must manage properties, owners, buyers, agents, commissions, approvals, documents, and transaction histories in a way that is secure, traceable, and easy to maintain. Manual workflows or disconnected spreadsheets are not enough once the organization begins to grow.
@@ -864,4 +926,3 @@ From a software engineering perspective, the project demonstrates layered archit
 - The diagrams in this report use Mermaid syntax so they can be rendered in Markdown viewers that support Mermaid.
 - The terms **VZZ Brokerage** and **HomeQuest** refer to the same project context.
 - This report is intentionally detailed so it can be submitted as a standalone academic document.
-
