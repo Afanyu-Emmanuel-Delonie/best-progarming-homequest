@@ -1,237 +1,362 @@
-# VZZ Brokerage UML Overview
+# HomeQuest
 
-This repository contains the HomeQuest prototype, adapted here as the VZZ Brokerage system documentation set.
-The diagrams below capture the main actors, data model, workflows, and software components for the brokerage platform.
+HomeQuest is a full-stack real estate brokerage management platform for VZZ Brokerage. It supports property listings, property applications, transactions, commissions, documents, dashboards, authentication, and role-based access control in a single system.
 
-## 1. Use Case Diagram
+This repository is organized as a production-style monorepo with:
 
-Actors:
+- a Spring Boot backend
+- a React/Vite frontend
+- Docker support for local deployment
+- seeded demo data for fast evaluation
+- a separate academic report in [`report.md`](/c:/Users/afany/Desktop/Projects/best-homequest/report.md)
 
-- Sales Agents
-- Operations Managers
-- Clients
-- Property Owners
+## Product Summary
 
-Main use cases:
+HomeQuest is designed to solve the operational problems that appear in a growing brokerage business:
 
-- User registration and login
-- Property listing management
-- Submitting property applications
-- Tracking commissions
+- scattered data stored in spreadsheets, chats, or isolated tools
+- poor visibility into property, application, and transaction status
+- manual commission calculations and approval workflows
+- difficulty enforcing role-specific access
+- lack of a maintainable structure for future growth
 
-```mermaid
-flowchart LR
-    SA[Sales Agents]
-    OM[Operations Managers]
-    C[Clients]
-    PO[Property Owners]
+The system centralizes brokerage activity into a structured web application so company staff can manage day-to-day operations more reliably.
 
-    UC1((User registration / login))
-    UC2((Property listing management))
-    UC3((Submit property application))
-    UC4((Track commissions))
-    UC5((Approve / reject listings))
-    UC6((Review applications))
+## Key Capabilities
 
-    SA --> UC1
-    SA --> UC2
-    SA --> UC4
-    OM --> UC1
-    OM --> UC2
-    OM --> UC5
-    OM --> UC6
-    C --> UC1
-    C --> UC3
-    C --> UC4
-    PO --> UC1
-    PO --> UC2
-    PO --> UC3
-    PO --> UC4
+- user registration and login
+- JWT-based authentication
+- role-based access for admin, agent, owner, and client/customer users
+- property listing management
+- property search and detail viewing
+- property application submission and review
+- transaction creation and tracking
+- automated commission calculation and payout splitting
+- document handling modules
+- dashboard summaries for business oversight
+- live notification support through WebSocket infrastructure
+- Docker-based deployment
+
+## Technology Stack
+
+### Backend
+
+- Java 21
+- Spring Boot 3.2.5
+- Spring Security
+- Spring Data JPA
+- Hibernate
+- PostgreSQL 17
+- JJWT
+- SpringDoc OpenAPI
+- Spring WebSocket
+- Lombok
+
+### Frontend
+
+- React 19
+- Vite
+- Redux Toolkit
+- React Router
+- Axios
+- STOMP / SockJS
+- React Toastify
+- Tailwind CSS
+
+### DevOps and Tooling
+
+- Docker
+- Docker Compose
+- Maven
+
+## Architecture
+
+HomeQuest follows a layered architecture on the backend:
+
+- **Controller layer** handles HTTP requests and responses
+- **Service layer** contains business rules and transaction handling
+- **Repository layer** handles persistence
+- **Model layer** represents the business entities
+- **DTO layer** transfers data safely between client and server
+
+The frontend follows a role-oriented structure:
+
+- public pages for marketing and property browsing
+- authentication pages
+- separate layouts for admin, agent, owner, and client areas
+- reusable shared components for forms, tables, drawers, and navigation
+- Redux slices for application state
+- API helper modules for backend communication
+
+## Domain Modules
+
+The backend is organized by feature domain:
+
+- `auth`
+- `user`
+- `property`
+- `transaction`
+- `document`
+- `gateway`
+
+This modular layout keeps the codebase maintainable and makes it easier to extend each business area independently.
+
+## Main User Roles
+
+- **ROLE_ADMIN**: full administrative oversight
+- **ROLE_AGENT**: manage listings, applications, and commissions
+- **ROLE_OWNER**: track owned properties and related activity
+- **ROLE_CUSTOMER**: browse properties and submit applications
+
+The frontend also refers to the customer role as a client in several screens and layouts.
+
+## Core Workflows
+
+### 1. Authentication
+
+Users register and log in through JWT-secured endpoints. The frontend stores the token and attaches it to API requests automatically.
+
+### 2. Property Management
+
+Agents and administrators can create, edit, assign, and manage listings. Properties move through states such as available, under offer, and sold.
+
+### 3. Property Applications
+
+Clients and owners can submit applications for properties. Applications can be accepted, rejected, withdrawn, or expired.
+
+### 4. Transaction and Commission Tracking
+
+Accepted applications can create transactions. The transaction module calculates commissions and stores payout records for the company and agents.
+
+### 5. Dashboards
+
+Role-specific dashboards provide summaries and performance indicators for agents and company users.
+
+## Repository Structure
+
+```text
+best-homequest/
+|-- backend/
+|-- frontend/
+|-- docker-compose.yml
+|-- report.md
+|-- SYSTEM_README.md
+`-- README.md
 ```
 
-## 2. Class Diagram
+### Backend
 
-Core entities:
+The backend contains Spring Boot source code, configuration, and build files.
 
-- Property
-- User
-- Agent
-- Client
-- Owner
+### Frontend
 
-Supporting operations:
+The frontend contains the React app, UI components, pages, hooks, store, and API wrappers.
 
-- Transaction
-- Commission
-- Document
+### Documentation
 
-```mermaid
-classDiagram
-    class User {
-        +Long id
-        +String firstName
-        +String lastName
-        +String email
-        +String passwordHash
-        +String role
-        +boolean active
-    }
+- `README.md` = project documentation and setup guide
+- `report.md` = academic final project report
+- `SYSTEM_README.md` = implementation-oriented notes
 
-    class Agent {
-        +String licenseNumber
-        +String phone
-        +String companyName
-        +String bio
-    }
+## Configuration
 
-    class Client {
-        +String phone
-        +String nationalId
-        +String preferredLocation
-    }
+### Backend Environment Variables
 
-    class Owner {
-        +String phone
-        +String idNumber
-    }
+The backend reads configuration from environment variables or a local `.env` file.
 
-    class Property {
-        +Long id
-        +String title
-        +String propertyType
-        +String status
-        +double price
-        +String location
-    }
-
-    class Transaction {
-        +Long id
-        +double saleAmount
-        +String status
-        +LocalDate completedAt
-    }
-
-    class Commission {
-        +Long id
-        +double rate
-        +double amount
-        +String commissionType
-    }
-
-    class Document {
-        +Long id
-        +String fileName
-        +String fileType
-        +String storageUrl
-    }
-
-    User <|-- Agent
-    User <|-- Client
-    User <|-- Owner
-
-    Agent "1" --> "many" Property : manages
-    Owner "1" --> "many" Property : owns
-    Client "1" --> "many" Property : applies for
-
-    Property "1" --> "many" Transaction : generates
-    Transaction "1" --> "many" Commission : creates
-    Property "1" --> "many" Document : has
-    Transaction "1" --> "many" Document : attaches
+```env
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/homequest
+SPRING_DATASOURCE_USERNAME=homequest
+SPRING_DATASOURCE_PASSWORD=homequest123
+JWT_SECRET=change-me-to-a-long-secret-key
+JWT_EXPIRATION_MS=86400000
 ```
 
-## 3. Activity Diagram
+### Frontend Environment Variables
 
-This flow shows the internal working of the brokerage from bid submission to approval and commission calculation.
-
-```mermaid
-flowchart TD
-    A([Start]) --> B[Client submits bid]
-    B --> C{Bid valid?}
-    C -- No --> D[Reject submission and show validation errors]
-    D --> Z([End])
-    C -- Yes --> E[Save property application]
-    E --> F[Notify listing agent and owner]
-    F --> G[Operations manager reviews bid]
-    G --> H{Approved?}
-    H -- No --> I[Mark bid rejected]
-    I --> J[Notify client]
-    J --> Z
-    H -- Yes --> K[Mark bid accepted]
-    K --> L[Create transaction record]
-    L --> M[Calculate total commission]
-    M --> N[Split commission between company and agents]
-    N --> O[Store commission records]
-    O --> P[Update property status to sold]
-    P --> Q[Notify all stakeholders]
-    Q --> Z([End])
+```env
+VITE_API_URL=http://localhost:8080
 ```
 
-## 4. Sequence Diagram
+If `VITE_API_URL` is not set, the frontend defaults to `http://localhost:8080/api/v1`.
 
-This sequence models property application submission.
+## Local Development Setup
 
-```mermaid
-sequenceDiagram
-    actor Client
-    participant UI as React Frontend
-    participant PC as PropertyController
-    participant PS as PropertyService
-    participant PR as PropertyRepository
-    participant DB as PostgreSQL
+### Prerequisites
 
-    Client->>UI: Fill application form and submit
-    UI->>PC: POST /api/v1/applications
-    PC->>PS: validateAndSubmit(applicationDto)
-    PS->>PR: findPropertyById(propertyId)
-    PR->>DB: SELECT property record
-    DB-->>PR: property data
-    PR-->>PS: property entity
-    PS->>PR: save(application)
-    PR->>DB: INSERT application record
-    DB-->>PR: saved application
-    PR-->>PS: application entity
-    PS-->>PC: application response
-    PC-->>UI: 201 Created + payload
-    UI-->>Client: Show confirmation
+- Java 21
+- Node.js 22 or newer
+- Maven, or the included Maven wrapper
+- PostgreSQL 17
+
+### Backend
+
+```bash
+cd backend
+./mvnw spring-boot:run
 ```
 
-## 5. Component Diagram
+On Windows:
 
-This diagram shows the major physical components and their dependencies.
-
-```mermaid
-flowchart LR
-    subgraph Frontend["React Frontend"]
-        FE1[Pages]
-        FE2[Components]
-        FE3[API Client]
-    end
-
-    subgraph Backend["Spring Boot Backend"]
-        BE1[Controllers]
-        BE2[Services]
-        BE3[Repositories]
-        BE4[Security / JWT]
-    end
-
-    DB[(PostgreSQL Database)]
-    DC1[(Frontend Docker Container)]
-    DC2[(Backend Docker Container)]
-    DC3[(Database Docker Container)]
-
-    FE3 --> BE1
-    BE1 --> BE2
-    BE2 --> BE3
-    BE3 --> DB
-    BE4 --> BE1
-
-    DC1 -. packages .-> FE3
-    DC2 -. packages .-> BE1
-    DC3 -. persists .-> DB
+```powershell
+cd backend
+.\mvnw.cmd spring-boot:run
 ```
 
-## Notes
+### Frontend
 
-- The diagrams are written in Mermaid so they can be rendered directly in GitHub and many Markdown viewers.
-- The terms VZZ Brokerage and HomeQuest refer to the same project structure in this repository.
-- For implementation details, see the root-level `SYSTEM_README.md` and the module-specific READMEs in `backend/` and `frontend/`.
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+## Docker Setup
+
+The repository includes a full Docker Compose stack:
+
+- PostgreSQL database
+- Spring Boot backend
+- Nginx-served frontend build
+
+### Start the Full Stack
+
+```bash
+docker compose up --build
+```
+
+### Default Ports
+
+- Frontend: `http://localhost:3000`
+- Backend API: `http://localhost:8080`
+- PostgreSQL: `localhost:5432`
+
+### Docker Notes
+
+- the backend container reads database and JWT values from environment variables
+- the frontend container is built with `VITE_API_URL=http://localhost:8080`
+- the database uses a named volume for persistence
+
+## API Documentation
+
+The backend exposes OpenAPI documentation through SpringDoc.
+
+- OpenAPI JSON: `http://localhost:8080/api/v1/v3/api-docs`
+- Swagger UI: `http://localhost:8080/api/v1/swagger-ui.html`
+
+If your local setup redirects Swagger differently, use the OpenAPI JSON endpoint and the configured UI route from `backend/src/main/resources/application.properties`.
+
+## Key Backend Endpoints
+
+### Authentication
+
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/login`
+
+### Properties
+
+- `GET /api/v1/properties`
+- `POST /api/v1/properties`
+- `GET /api/v1/properties/{id}`
+- `PUT /api/v1/properties/{id}`
+- `PATCH /api/v1/properties/{id}/status`
+- `DELETE /api/v1/properties/{id}`
+
+### Property Applications
+
+- `POST /api/v1/applications`
+- `GET /api/v1/applications/my`
+- `PATCH /api/v1/applications/{id}/accept`
+- `PATCH /api/v1/applications/{id}/reject`
+- `PATCH /api/v1/applications/{id}/withdraw`
+
+### Transactions
+
+- `POST /api/v1/transactions`
+- `GET /api/v1/transactions/{id}`
+- `PATCH /api/v1/transactions/{id}/status`
+
+### Dashboards
+
+- `GET /api/v1/dashboard/agent`
+- `GET /api/v1/dashboard/company/{id}`
+
+## Seeded Demo Accounts
+
+The database seeder creates test users and sample records on startup.
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@homequest.rw` | `Admin@1234` |
+| Agent | `alice@homequest.rw` | `Agent@1234` |
+| Agent | `bob@homequest.rw` | `Agent@1234` |
+| Owner | `owner@homequest.rw` | `Owner@1234` |
+| Client | `client@homequest.rw` | `Client@1234` |
+
+## Testing and Validation
+
+Recommended verification steps:
+
+1. start PostgreSQL
+2. run the backend
+3. confirm Swagger UI loads
+4. run the frontend
+5. log in with a seeded account
+6. verify role-based navigation
+7. create and review a property application
+8. run the application through Docker Compose
+
+Sample high-priority checks:
+
+- login succeeds and returns a token
+- protected routes reject invalid or missing tokens
+- property creation persists correctly
+- application acceptance creates a transaction
+- commissions are generated correctly
+- dashboards load with data
+
+## Development Notes
+
+- The backend uses a repository pattern to isolate database logic from business logic.
+- The frontend uses a centralized Axios client to attach JWT tokens and handle errors consistently.
+- `PropertyApplicationService` contains the main application review flow and scheduled expiry logic.
+- `DataSeeder` inserts demo data and is helpful for presentations and demonstrations.
+
+## Troubleshooting
+
+### Backend Fails to Start
+
+- check that PostgreSQL is running
+- verify `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, and `SPRING_DATASOURCE_PASSWORD`
+- confirm Java 21 is installed
+
+### Frontend Cannot Reach Backend
+
+- confirm `VITE_API_URL`
+- make sure the backend is running on port `8080`
+- verify CORS or proxy settings if you change the default host
+
+### Docker Compose Fails
+
+- confirm Docker Desktop or the Docker Engine is running
+- ensure ports `3000`, `5432`, and `8080` are free
+- inspect container logs with `docker compose logs`
+
+## Contributing
+
+If you are extending the system:
+
+1. keep new code aligned with the existing layered architecture
+2. place business logic in services, not controllers
+3. keep API contracts in DTOs
+4. reuse the centralized frontend API client
+5. avoid committing generated files or local environment files
+
+## Related Documentation
+
+- [report.md](/c:/Users/afany/Desktop/Projects/best-homequest/report.md)
+- [SYSTEM_README.md](/c:/Users/afany/Desktop/Projects/best-homequest/SYSTEM_README.md)
+
+## Status
+
+The repository currently serves as a functional prototype with documentation, seeded data, Docker support, and a clear path for future production hardening.
