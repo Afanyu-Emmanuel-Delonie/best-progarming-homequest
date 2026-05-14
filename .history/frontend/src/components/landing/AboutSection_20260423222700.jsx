@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react"
 import { Link } from "react-router-dom"
 import { ArrowRight } from "lucide-react"
 import { ROUTES } from "../../constants/routes"
-import about from "../../assets/about.png"
 
 function useReveal() {
   const ref = useRef(null)
@@ -40,7 +39,7 @@ export default function AboutSection() {
         {/* Right — image */}
         <div style={{ borderRadius: "20px", overflow: "hidden", height: 460 }}>
           <img
-            src={about}
+            src="https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&q=80"
             alt="Kigali"
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />

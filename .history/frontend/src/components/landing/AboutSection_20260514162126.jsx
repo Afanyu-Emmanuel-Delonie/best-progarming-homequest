@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react"
 import { Link } from "react-router-dom"
 import { ArrowRight } from "lucide-react"
 import { ROUTES } from "../../constants/routes"
-import about from "../../assets/about.png"
+import about from "../../assets/about.jpg"
 
 function useReveal() {
   const ref = useRef(null)

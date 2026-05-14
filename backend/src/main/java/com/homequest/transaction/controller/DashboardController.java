@@ -31,9 +31,16 @@ public class DashboardController {
     }
 
     @GetMapping("/company/{companyId}")
-    @PreAuthorize("hasAnyAuthority('ROLE_COMPANY_ADMIN', 'ROLE_MANAGER')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @Operation(summary = "Company dashboard", description = "Returns total revenue, commission breakdown, properties by status/type/city, monthly sales trend and top agents leaderboard")
     public ResponseEntity<CompanyDashboardResponse> getCompanyDashboard(@PathVariable Long companyId) {
         return ResponseEntity.ok(dashboardService.getCompanyDashboard(companyId));
+    }
+
+    @GetMapping("/company")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @Operation(summary = "Company dashboard (default company)", description = "Returns dashboard for company ID 1 — convenience endpoint for admin users")
+    public ResponseEntity<CompanyDashboardResponse> getDefaultCompanyDashboard() {
+        return ResponseEntity.ok(dashboardService.getCompanyDashboard(1L));
     }
 }
