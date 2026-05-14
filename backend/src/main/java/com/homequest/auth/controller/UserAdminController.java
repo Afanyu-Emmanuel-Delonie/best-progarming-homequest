@@ -1,6 +1,7 @@
 package com.homequest.auth.controller;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -37,6 +38,22 @@ public class UserAdminController {
                 .createdAt(u.getCreatedAt())
                 .build()).toList();
         return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/by-public-id/{publicId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<AuthResponse> getByPublicId(@PathVariable UUID publicId) {
+        return ResponseEntity.ok(userRepository.findByPublicId(publicId)
+                .map(u -> AuthResponse.builder()
+                        .id(u.getId())
+                        .publicId(u.getPublicId() != null ? u.getPublicId().toString() : null)
+                        .username(u.getUsername())
+                        .email(u.getEmail())
+                        .role(u.getRole().name())
+                        .status(u.isActive() ? "ACTIVE" : "SUSPENDED")
+                        .createdAt(u.getCreatedAt())
+                        .build())
+                .orElseThrow(() -> new IllegalArgumentException("User not found")));
     }
 
     @PatchMapping("/{id}/suspend")

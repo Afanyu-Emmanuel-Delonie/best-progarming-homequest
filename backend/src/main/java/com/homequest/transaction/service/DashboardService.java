@@ -43,8 +43,8 @@ public class DashboardService {
         long totalListingsTransacted = transactionRepository.countByListingAgentPublicIdAndStatus(agentPublicId, TransactionStatus.COMPLETED);
 
         // commission totals
-        BigDecimal sellingCommission = transactionRepository.sumSellingCommissionByAgentAndStatus(agentPublicId, TransactionStatus.COMPLETED);
-        BigDecimal listingCommission = transactionRepository.sumListingCommissionByAgentAndStatus(agentPublicId, TransactionStatus.COMPLETED);
+        BigDecimal sellingCommission = zeroIfNull(transactionRepository.sumSellingCommissionByAgentAndStatus(agentPublicId, TransactionStatus.COMPLETED));
+        BigDecimal listingCommission = zeroIfNull(transactionRepository.sumListingCommissionByAgentAndStatus(agentPublicId, TransactionStatus.COMPLETED));
         BigDecimal totalCommission = sellingCommission.add(listingCommission);
 
         // pending applications on my listings
@@ -90,9 +90,9 @@ public class DashboardService {
         // transaction metrics
         long completedSales = transactionRepository.countByCompanyIdAndStatus(companyId, TransactionStatus.COMPLETED);
         long pendingSales = transactionRepository.countByCompanyIdAndStatus(companyId, TransactionStatus.PENDING);
-        BigDecimal totalRevenue = transactionRepository.sumSaleAmountByCompanyIdAndStatus(companyId, TransactionStatus.COMPLETED);
-        BigDecimal totalCommission = transactionRepository.sumTotalCommissionByCompanyIdAndStatus(companyId, TransactionStatus.COMPLETED);
-        BigDecimal companyCommission = transactionRepository.sumCompanyCommissionByCompanyIdAndStatus(companyId, TransactionStatus.COMPLETED);
+        BigDecimal totalRevenue = zeroIfNull(transactionRepository.sumSaleAmountByCompanyIdAndStatus(companyId, TransactionStatus.COMPLETED));
+        BigDecimal totalCommission = zeroIfNull(transactionRepository.sumTotalCommissionByCompanyIdAndStatus(companyId, TransactionStatus.COMPLETED));
+        BigDecimal companyCommission = zeroIfNull(transactionRepository.sumCompanyCommissionByCompanyIdAndStatus(companyId, TransactionStatus.COMPLETED));
 
         // property metrics
         long totalProperties = propertyRepository.countByCompanyId(companyId);
@@ -156,5 +156,9 @@ public class DashboardService {
                 row -> (Long) row[1],
                 (a, b) -> a,
                 LinkedHashMap::new));
+    }
+
+    private BigDecimal zeroIfNull(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
     }
 }

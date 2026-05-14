@@ -56,7 +56,7 @@ function RequestDocModal({ client, applications, onClose, onRequested }) {
           </div>
           <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: "7px", border: "1px solid var(--color-border)", background: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-text-muted)" }}><X size={15} /></button>
         </div>
-        <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <form onSubmit={(e) => { e.preventDefault(); submit() }} style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div>
             <label style={lbl}>Document Type</label>
             <select style={inp} value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}>
@@ -78,12 +78,12 @@ function RequestDocModal({ client, applications, onClose, onRequested }) {
             <label style={lbl}>Note <span style={{ fontWeight: 400, textTransform: "none" }}>(optional)</span></label>
             <textarea style={{ ...inp, resize: "vertical", minHeight: 60 }} value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))} placeholder="e.g. Please upload a clear copy of your national ID." />
           </div>
-        </div>
+        </form>
         <div style={{ display: "flex", gap: "0.65rem", justifyContent: "flex-end", padding: "1rem 1.5rem", borderTop: "1px solid var(--color-border)" }}>
-          <button onClick={onClose} style={{ padding: "0.55rem 1.1rem", borderRadius: "9px", border: "1px solid var(--color-border)", background: "none", color: "var(--color-text-muted)", fontWeight: 500, fontSize: "0.8375rem", cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
-          <button onClick={submit} disabled={loading} style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.55rem 1.25rem", borderRadius: "9px", border: "none", backgroundColor: "#1D4ED8", color: "#fff", fontWeight: 600, fontSize: "0.8375rem", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.75 : 1, fontFamily: "inherit" }}>
+          <button type="button" onClick={onClose} style={{ padding: "0.55rem 1.1rem", borderRadius: "9px", border: "1px solid var(--color-border)", background: "none", color: "var(--color-text-muted)", fontWeight: 500, fontSize: "0.8375rem", cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
+          <button type="submit" disabled={loading} style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.55rem 1.25rem", borderRadius: "9px", border: "none", backgroundColor: "#1D4ED8", color: "#fff", fontWeight: 600, fontSize: "0.8375rem", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.75 : 1, fontFamily: "inherit" }}>
             {loading ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> : <FileText size={14} />}
-            {loading ? "Sending…" : "Send Request"}
+            {loading ? "Sending..." : "Send Request"}
           </button>
         </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>

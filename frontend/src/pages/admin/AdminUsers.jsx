@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react"
-import { Eye, ShieldCheck, ShieldOff, Trash2, Loader2, UserPlus, X } from "lucide-react"
+import { Link } from "react-router-dom"
+import { Eye, ShieldCheck, ShieldOff, Trash2, Loader2, UserPlus, X, Download } from "lucide-react"
 import DataTable from "../../components/shared/DataTable"
 import { StatCard, Toolbar, FilterGroup, Pill, ClearBtn, Badge, ActionsMenu } from "../../components/shared/AdminUI"
 import DetailsDrawer, { drawerPrimaryBtn, drawerOutlineBtn } from "../../components/shared/DetailsDrawer"
@@ -75,7 +76,7 @@ function AddUserModal({ onClose, onCreated }) {
           </div>
           <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: "7px", border: "1px solid var(--color-border)", background: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-text-muted)" }}><X size={15} /></button>
         </div>
-        <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem", maxHeight: "70vh", overflowY: "auto" }}>
+        <form onSubmit={(e) => { e.preventDefault(); handleSubmit() }} style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem", maxHeight: "70vh", overflowY: "auto" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
             <Field label="First Name" error={errors.firstName}><input style={inp} value={form.firstName} onChange={e => set("firstName", e.target.value)} placeholder="Jean" /></Field>
             <Field label="Last Name"  error={errors.lastName}><input style={inp} value={form.lastName}  onChange={e => set("lastName",  e.target.value)} placeholder="Habimana" /></Field>
@@ -96,12 +97,12 @@ function AddUserModal({ onClose, onCreated }) {
               <Field label="Company ID"><input style={inp} type="number" value={form.companyId} onChange={e => set("companyId", e.target.value)} placeholder="1" /></Field>
             </div>
           )}
-        </div>
+        </form>
         <div style={{ display: "flex", gap: "0.65rem", justifyContent: "flex-end", padding: "1rem 1.5rem", borderTop: "1px solid var(--color-border)" }}>
-          <button onClick={onClose} style={{ padding: "0.55rem 1.1rem", borderRadius: "9px", border: "1px solid var(--color-border)", background: "none", color: "var(--color-text-muted)", fontWeight: 500, fontSize: "0.8375rem", cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
-          <button onClick={handleSubmit} disabled={loading} style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.55rem 1.25rem", borderRadius: "9px", border: "none", backgroundColor: "var(--color-primary)", color: "#fff", fontWeight: 600, fontSize: "0.8375rem", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.75 : 1, fontFamily: "inherit" }}>
+          <button type="button" onClick={onClose} style={{ padding: "0.55rem 1.1rem", borderRadius: "9px", border: "1px solid var(--color-border)", background: "none", color: "var(--color-text-muted)", fontWeight: 500, fontSize: "0.8375rem", cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
+          <button type="submit" disabled={loading} style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.55rem 1.25rem", borderRadius: "9px", border: "none", backgroundColor: "var(--color-primary)", color: "#fff", fontWeight: 600, fontSize: "0.8375rem", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.75 : 1, fontFamily: "inherit" }}>
             {loading && <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />}
-            {loading ? "Creating…" : "Create User"}
+            {loading ? "Creating..." : "Create User"}
           </button>
         </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
@@ -114,6 +115,7 @@ export default function AdminUsers() {
   const [data, setData]           = useState([])
   const [loading, setLoading]     = useState(true)
   const [showAdd, setShowAdd]     = useState(false)
+  const [exporting, setExporting]  = useState(false)
   const [roleTab, setRoleTab]     = useState("ALL")
   const [search, setSearch]       = useState("")
   const [statusFilter, setStatus] = useState("ALL")
@@ -170,6 +172,11 @@ export default function AdminUsers() {
       setData(prev => prev.filter(u => u.id !== id))
       setSelected(s => s?.id === id ? null : s)
     } catch {}
+  }
+
+  const exportReport = () => {
+    setExporting(true)
+    window.location.href = "/admin/reports"
   }
 
   const userCard = (u) => {
@@ -246,9 +253,14 @@ export default function AdminUsers() {
       {/* Header with Add button */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.75rem" }}>
         <p style={{ margin: 0, fontWeight: 700, fontSize: "1.1rem", color: "var(--color-text)" }}>Users</p>
-        <button onClick={() => setShowAdd(true)} style={{ display: "flex", alignItems: "center", gap: "0.45rem", padding: "0.6rem 1.1rem", borderRadius: "9px", border: "none", backgroundColor: "var(--color-primary)", color: "#fff", fontWeight: 600, fontSize: "0.8375rem", cursor: "pointer", fontFamily: "inherit" }}>
-          <UserPlus size={15} /> Add User
-        </button>
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          <button onClick={exportReport} disabled={exporting} style={{ display: "flex", alignItems: "center", gap: "0.45rem", padding: "0.6rem 1.05rem", borderRadius: "9px", border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", color: "var(--color-text)", fontWeight: 600, fontSize: "0.8375rem", cursor: exporting ? "not-allowed" : "pointer", fontFamily: "inherit", opacity: exporting ? 0.7 : 1 }}>
+            <Download size={15} /> {exporting ? "Exporting…" : "Export Report"}
+          </button>
+          <button onClick={() => setShowAdd(true)} style={{ display: "flex", alignItems: "center", gap: "0.45rem", padding: "0.6rem 1.1rem", borderRadius: "9px", border: "none", backgroundColor: "var(--color-primary)", color: "#fff", fontWeight: 600, fontSize: "0.8375rem", cursor: "pointer", fontFamily: "inherit" }}>
+            <UserPlus size={15} /> Add User
+          </button>
+        </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "1rem" }}>

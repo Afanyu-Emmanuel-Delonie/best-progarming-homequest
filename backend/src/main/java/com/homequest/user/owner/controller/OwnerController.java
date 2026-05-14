@@ -39,7 +39,7 @@ public class OwnerController {
     @GetMapping("/me")
     @PreAuthorize("hasAuthority('ROLE_OWNER')")
     public ResponseEntity<OwnerResponse> getMyProfile(Authentication auth) {
-        return ResponseEntity.ok(ownerService.getByUserPublicId((String) auth.getPrincipal()));
+        return safeProfileResponse(() -> ownerService.getByUserPublicId((String) auth.getPrincipal()));
     }
 
     @GetMapping
@@ -51,7 +51,7 @@ public class OwnerController {
     @GetMapping("/by-public-id/{publicId}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<OwnerResponse> getByPublicId(@PathVariable String publicId) {
-        return ResponseEntity.ok(ownerService.getByUserPublicId(publicId));
+        return safeProfileResponse(() -> ownerService.getByUserPublicId(publicId));
     }
 
     @PutMapping("/me")
@@ -59,5 +59,18 @@ public class OwnerController {
     public ResponseEntity<OwnerResponse> updateMyProfile(@Valid @RequestBody OwnerRequest request,
             Authentication auth) {
         return ResponseEntity.ok(ownerService.updateProfile((String) auth.getPrincipal(), request));
+    }
+
+    private ResponseEntity<OwnerResponse> safeProfileResponse(ProfileLookup lookup) {
+        try {
+            return ResponseEntity.ok(lookup.get());
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.ok().build();
+        }
+    }
+
+    @FunctionalInterface
+    private interface ProfileLookup {
+        OwnerResponse get();
     }
 }

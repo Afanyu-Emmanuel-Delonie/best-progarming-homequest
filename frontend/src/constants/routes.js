@@ -26,6 +26,7 @@ export const ROUTES = {
   ADMIN_TRANSACTIONS:"/admin/transactions",
   ADMIN_DOCUMENTS:   "/admin/documents",
   ADMIN_SETTINGS:    "/admin/settings",
+  ADMIN_REPORTS:     "/admin/reports",
 
   // Agent
   AGENT:             "/agent",
@@ -36,13 +37,16 @@ export const ROUTES = {
   AGENT_TRANSACTIONS:"/agent/transactions",
   AGENT_COMMISSIONS: "/agent/commissions",
   AGENT_PROFILE:     "/agent/profile",
+  AGENT_REPORTS:     "/agent/reports",
 
   // Client
   CLIENT:            "/client",
+  CLIENT_REPORTS:    "/client/reports",
   CLIENT_APPLICATIONS:"/client/applications",
 
   // Owner
   OWNER:             "/owner",
+  OWNER_REPORTS:     "/owner/reports",
   OWNER_PROPERTIES:  "/owner/properties",
   OWNER_TRANSACTIONS:"/owner/transactions",
 

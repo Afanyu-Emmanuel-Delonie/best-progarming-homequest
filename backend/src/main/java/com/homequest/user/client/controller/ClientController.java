@@ -52,13 +52,13 @@ public class ClientController {
     @GetMapping("/me")
     @PreAuthorize("hasAuthority('ROLE_CUSTOMER')")
     public ResponseEntity<ClientResponse> getMyProfile(Authentication auth) {
-        return ResponseEntity.ok(clientService.getByUserPublicId((String) auth.getPrincipal()));
+        return safeProfileResponse(() -> clientService.getByUserPublicId((String) auth.getPrincipal()));
     }
 
     @GetMapping("/by-public-id/{publicId}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ClientResponse> getByPublicId(@PathVariable String publicId) {
-        return ResponseEntity.ok(clientService.getByUserPublicId(publicId));
+        return safeProfileResponse(() -> clientService.getByUserPublicId(publicId));
     }
 
     @PutMapping("/me")
@@ -66,5 +66,18 @@ public class ClientController {
     public ResponseEntity<ClientResponse> updateMyProfile(@Valid @RequestBody ClientRequest request,
             Authentication auth) {
         return ResponseEntity.ok(clientService.updateProfile((String) auth.getPrincipal(), request));
+    }
+
+    private ResponseEntity<ClientResponse> safeProfileResponse(ProfileLookup lookup) {
+        try {
+            return ResponseEntity.ok(lookup.get());
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.ok().build();
+        }
+    }
+
+    @FunctionalInterface
+    private interface ProfileLookup {
+        ClientResponse get();
     }
 }

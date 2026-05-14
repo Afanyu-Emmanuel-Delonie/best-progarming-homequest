@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react"
-import { Eye, ShieldCheck, ShieldOff, Trash2, Loader2 } from "lucide-react"
+import { Eye, ShieldCheck, ShieldOff, Trash2, Loader2, Download } from "lucide-react"
 import DataTable from "../../components/shared/DataTable"
 import { StatCard, Toolbar, FilterGroup, Pill, ClearBtn, Badge, ActionsMenu } from "../../components/shared/AdminUI"
 import DetailsDrawer, { drawerPrimaryBtn, drawerOutlineBtn } from "../../components/shared/DetailsDrawer"
@@ -10,6 +10,7 @@ import { useTableData } from "../../hooks/useTableData"
 import { clientsApi } from "../../api/users.api"
 import { usersApi } from "../../api/users.api"
 import { applicationsApi } from "../../api/applications.api"
+import { reportsApi } from "../../api/reports.api"
 import { toast } from "react-toastify"
 
 // Merge client profiles (firstName, lastName, phone) onto auth user records
@@ -30,6 +31,7 @@ export default function AdminClients() {
   const [selected, setSelected]   = useState(null)
   const [selApps, setSelApps]     = useState([])
   const [appsLoading, setAppsLoading] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const { filterRef, filterOpen, setFilterOpen } = useFilterPanel()
 
   useEffect(() => {
@@ -101,6 +103,16 @@ export default function AdminClients() {
     } catch {}
   }
 
+  const exportReport = async () => {
+    setExporting(true)
+    try {
+      await reportsApi.downloadClients()
+      toast.success("Clients report downloaded")
+    } finally {
+      setExporting(false)
+    }
+  }
+
   const displayName = (u) => u.firstName ? `${u.firstName} ${u.lastName}` : u.username
 
   const columns = [
@@ -139,8 +151,12 @@ export default function AdminClients() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-
-      <p style={{ margin: 0, fontWeight: 700, fontSize: "1.1rem", color: "var(--color-text)" }}>Clients</p>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.75rem", flexWrap: "wrap" }}>
+        <p style={{ margin: 0, fontWeight: 700, fontSize: "1.1rem", color: "var(--color-text)" }}>Clients</p>
+        <button onClick={exportReport} disabled={exporting} style={{ display: "flex", alignItems: "center", gap: "0.45rem", padding: "0.6rem 1.05rem", borderRadius: "9px", border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", color: "var(--color-text)", fontWeight: 600, fontSize: "0.8375rem", cursor: exporting ? "not-allowed" : "pointer", fontFamily: "inherit", opacity: exporting ? 0.7 : 1 }}>
+          <Download size={15} /> {exporting ? "Exporting…" : "Export Report"}
+        </button>
+      </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "1rem" }}>
         <StatCard label="Total Clients" value={stats.total}     color="var(--color-primary)" />

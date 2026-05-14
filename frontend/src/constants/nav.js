@@ -5,6 +5,7 @@ import {
   FileText,
   ArrowLeftRight,
   ClipboardList,
+  BarChart3,
   Settings,
   DollarSign,
   UserCircle,
@@ -19,6 +20,7 @@ const icon = (Component) => createElement(Component, { size: 18 })
 
 export const ADMIN_NAV = [
   { label: "Dashboard",    href: "/admin",                icon: icon(LayoutDashboard), end: true },
+  { label: "Reports",      href: "/admin/reports",        icon: icon(BarChart3) },
   { label: "Users",        href: "/admin/users",          icon: icon(Users) },
   { label: "Clients",      href: "/admin/clients",        icon: icon(UserCheck) },
   { label: "Properties",   href: "/admin/properties",     icon: icon(Building2) },
@@ -30,6 +32,7 @@ export const ADMIN_NAV = [
 
 export const CLIENT_NAV = [
   { label: "Dashboard",    href: "/client",               icon: icon(LayoutDashboard), end: true },
+  { label: "Reports",      href: "/client/reports",       icon: icon(BarChart3) },
   { label: "Applications", href: "/client/applications",  icon: icon(ClipboardList) },
   { label: "Documents",    href: "/client/documents",     icon: icon(FolderOpen) },
   { label: "Saved",        href: "/client/saved",         icon: icon(Heart) },
@@ -38,6 +41,7 @@ export const CLIENT_NAV = [
 
 export const OWNER_NAV = [
   { label: "Dashboard",    href: "/owner",                icon: icon(LayoutDashboard), end: true },
+  { label: "Reports",      href: "/owner/reports",        icon: icon(BarChart3) },
   { label: "My Properties",href: "/owner/properties",     icon: icon(Building2) },
   { label: "Transactions", href: "/owner/transactions",   icon: icon(ArrowLeftRight) },
   { label: "Documents",    href: "/owner/documents",      icon: icon(FolderOpen) },
@@ -45,6 +49,7 @@ export const OWNER_NAV = [
 
 export const AGENT_NAV = [
   { label: "Dashboard",    href: "/agent",                icon: icon(LayoutDashboard), end: true },
+  { label: "Reports",      href: "/agent/reports",        icon: icon(BarChart3) },
   { label: "My Listings",  href: "/agent/listings",       icon: icon(Building2),       end: true },
   { label: "My Clients",   href: "/agent/clients",        icon: icon(UserCheck) },
   { label: "Applications", href: "/agent/applications",   icon: icon(ClipboardList) },
@@ -56,14 +61,17 @@ export const AGENT_NAV = [
 
 export const PAGE_TITLES = {
   "/client":               "Dashboard",
+  "/client/reports":       "Reports",
   "/client/applications":  "My Applications",
   "/client/documents":     "My Documents",
   "/client/saved":         "Saved Properties",
   "/owner":                "Dashboard",
+  "/owner/reports":        "Reports",
   "/owner/properties":     "My Properties",
   "/owner/transactions":   "Transactions",
   "/owner/documents":      "My Documents",
   "/admin":                "Dashboard",
+  "/admin/reports":        "Reports",
   "/admin/clients":       "Clients",
   "/admin/users":          "Users",
   "/admin/properties":     "Properties",
@@ -73,6 +81,7 @@ export const PAGE_TITLES = {
   "/admin/settings":       "Settings",
   "/agent/clients":       "My Clients",
   "/agent":                "Dashboard",
+  "/agent/reports":        "Reports",
   "/agent/listings":       "My Listings",
   "/agent/applications":   "Applications",
   "/agent/transactions":   "Transactions",

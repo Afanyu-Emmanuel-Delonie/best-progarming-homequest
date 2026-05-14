@@ -2,6 +2,7 @@ package com.webtech.backend;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 
@@ -91,6 +92,7 @@ public class DataSeeder implements ApplicationRunner {
         seedLocations();
 
         if (userRepository.count() > 0) {
+            seedChartDataBackfillIfNeeded();
             log.info("Database already seeded — skipping.");
             return;
         }
@@ -430,6 +432,354 @@ public class DataSeeder implements ApplicationRunner {
                         .recipientType(CommissionRecipientType.COMPANY)
                         .amount(companyCommission).build()));
 
+        Property prop5 = propertyRepository.save(Property.builder()
+                .title("Serviced Apartment in Kigali Heights")
+                .description("Fully furnished serviced apartment for corporate clients.")
+                .price(new BigDecimal("155000.00"))
+                .listingPrice(new BigDecimal("155000.00"))
+                .address("KG 9 Ave").city("Kigali").country("Rwanda")
+                .bedrooms(2).bathrooms(2).areaSqm(new BigDecimal("105.00"))
+                .type(PropertyType.APARTMENT).status(PropertyStatus.SOLD)
+                .locationCode(kacyiru.getCode())
+                .listingAgentPublicId(alice.getUserPublicId())
+                .sellingAgentPublicId(alice.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .buyerPublicId(clientUser.getPublicId().toString())
+                .imageUrl(IMG_APT2)
+                .companyId(companyId)
+                .build());
+
+        Property prop6 = propertyRepository.save(Property.builder()
+                .title("Retail Shop Front in Huye")
+                .description("High visibility retail unit near the main road.")
+                .price(new BigDecimal("98000.00"))
+                .listingPrice(new BigDecimal("98000.00"))
+                .address("HU 23 St").city("Huye").country("Rwanda")
+                .bedrooms(0).bathrooms(1).areaSqm(new BigDecimal("88.00"))
+                .type(PropertyType.COMMERCIAL).status(PropertyStatus.UNDER_OFFER)
+                .locationCode(butare.getCode())
+                .listingAgentPublicId(bob.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .imageUrl(IMG_RETAIL)
+                .companyId(companyId)
+                .build());
+
+        Property prop7 = propertyRepository.save(Property.builder()
+                .title("Family House in Rusizi")
+                .description("Three-bedroom family house with a large yard.")
+                .price(new BigDecimal("72000.00"))
+                .listingPrice(new BigDecimal("72000.00"))
+                .address("RS 12 Rd").city("Rusizi").country("Rwanda")
+                .bedrooms(3).bathrooms(2).areaSqm(new BigDecimal("140.00"))
+                .type(PropertyType.HOUSE).status(PropertyStatus.SOLD)
+                .locationCode(kamembe.getCode())
+                .listingAgentPublicId(bob.getUserPublicId())
+                .sellingAgentPublicId(bob.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .buyerPublicId(clientUser.getPublicId().toString())
+                .imageUrl(IMG_HOUSE2)
+                .companyId(companyId)
+                .build());
+
+        Property prop8 = propertyRepository.save(Property.builder()
+                .title("Development Land in Nyagatare")
+                .description("Corner parcel suited for a mixed-use development.")
+                .price(new BigDecimal("64000.00"))
+                .listingPrice(new BigDecimal("64000.00"))
+                .address("NY 78 Plot").city("Nyagatare").country("Rwanda")
+                .bedrooms(0).bathrooms(0).areaSqm(new BigDecimal("3200.00"))
+                .type(PropertyType.LAND).status(PropertyStatus.AVAILABLE)
+                .locationCode(tabagwe.getCode())
+                .listingAgentPublicId(alice.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .imageUrl(IMG_LAND)
+                .companyId(companyId)
+                .build());
+
+        Property prop9 = propertyRepository.save(Property.builder()
+                .title("Office Floor in Nyarugenge")
+                .description("Open-plan office floor suitable for a growing team.")
+                .price(new BigDecimal("178000.00"))
+                .listingPrice(new BigDecimal("178000.00"))
+                .address("KN 6 Blvd").city("Kigali").country("Rwanda")
+                .bedrooms(0).bathrooms(4).areaSqm(new BigDecimal("230.00"))
+                .type(PropertyType.OFFICE).status(PropertyStatus.SOLD)
+                .locationCode(gitega.getCode())
+                .listingAgentPublicId(bob.getUserPublicId())
+                .sellingAgentPublicId(alice.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .buyerPublicId(clientUser.getPublicId().toString())
+                .imageUrl(IMG_OFFICE2)
+                .companyId(companyId)
+                .build());
+
+        Property prop10 = propertyRepository.save(Property.builder()
+                .title("Townhouse in Kicukiro")
+                .description("Modern townhouse with private parking and terrace.")
+                .price(new BigDecimal("132000.00"))
+                .listingPrice(new BigDecimal("132000.00"))
+                .address("KK 19 Ln").city("Kigali").country("Rwanda")
+                .bedrooms(4).bathrooms(3).areaSqm(new BigDecimal("180.00"))
+                .type(PropertyType.HOUSE).status(PropertyStatus.UNDER_OFFER)
+                .locationCode(kanombe.getCode())
+                .listingAgentPublicId(alice.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .imageUrl(IMG_HOUSE)
+                .companyId(companyId)
+                .build());
+
+        Property prop11 = propertyRepository.save(Property.builder()
+                .title("Penthouse in Gasabo")
+                .description("Premium penthouse with panoramic city views.")
+                .price(new BigDecimal("310000.00"))
+                .listingPrice(new BigDecimal("310000.00"))
+                .address("KG 77 Tower").city("Kigali").country("Rwanda")
+                .bedrooms(3).bathrooms(3).areaSqm(new BigDecimal("210.00"))
+                .type(PropertyType.APARTMENT).status(PropertyStatus.AVAILABLE)
+                .locationCode(remera.getCode())
+                .listingAgentPublicId(bob.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .imageUrl(IMG_PENT)
+                .companyId(companyId)
+                .build());
+
+        applicationRepository.save(PropertyApplication.builder()
+                .propertyId(prop5.getId())
+                .buyerPublicId(clientUser.getPublicId().toString())
+                .buyerFullName("Marie Ingabire")
+                .buyerNationalId("1199990098765432")
+                .buyerPhone("+250780000006")
+                .offerAmount(new BigDecimal("148000.00"))
+                .depositAmount(new BigDecimal("14800.00"))
+                .fundingSource(FundingSource.BANK_MORTGAGE)
+                .proposedClosingDate(LocalDate.now().plusMonths(1))
+                .offerExpirationDate(LocalDate.now().plusDays(9))
+                .specialConditions("Requires furnished inventory list")
+                .status(ApplicationStatus.ACCEPTED)
+                .build());
+
+        applicationRepository.save(PropertyApplication.builder()
+                .propertyId(prop6.getId())
+                .buyerPublicId(ownerUser.getPublicId().toString())
+                .buyerFullName("Eric Nkurunziza")
+                .buyerNationalId("1199880012345678")
+                .buyerPhone("+250780000005")
+                .offerAmount(new BigDecimal("95000.00"))
+                .depositAmount(new BigDecimal("19000.00"))
+                .fundingSource(FundingSource.CASH)
+                .proposedClosingDate(LocalDate.now().plusMonths(2))
+                .offerExpirationDate(LocalDate.now().plusDays(12))
+                .status(ApplicationStatus.REJECTED)
+                .build());
+
+        applicationRepository.save(PropertyApplication.builder()
+                .propertyId(prop7.getId())
+                .buyerPublicId(clientUser.getPublicId().toString())
+                .buyerFullName("Marie Ingabire")
+                .buyerNationalId("1199990098765432")
+                .buyerPhone("+250780000006")
+                .offerAmount(new BigDecimal("70000.00"))
+                .depositAmount(new BigDecimal("7000.00"))
+                .fundingSource(FundingSource.PAYMENT_PLAN)
+                .proposedClosingDate(LocalDate.now().plusMonths(3))
+                .offerExpirationDate(LocalDate.now().plusDays(15))
+                .specialConditions("Monthly installments over 18 months")
+                .status(ApplicationStatus.PENDING)
+                .build());
+
+        applicationRepository.save(PropertyApplication.builder()
+                .propertyId(prop8.getId())
+                .buyerPublicId(ownerUser.getPublicId().toString())
+                .buyerFullName("Eric Nkurunziza")
+                .buyerNationalId("1199880012345678")
+                .buyerPhone("+250780000005")
+                .offerAmount(new BigDecimal("60000.00"))
+                .depositAmount(new BigDecimal("6000.00"))
+                .fundingSource(FundingSource.CASH)
+                .proposedClosingDate(LocalDate.now().plusMonths(1))
+                .offerExpirationDate(LocalDate.now().plusDays(8))
+                .status(ApplicationStatus.PENDING)
+                .build());
+
+        applicationRepository.save(PropertyApplication.builder()
+                .propertyId(prop9.getId())
+                .buyerPublicId(clientUser.getPublicId().toString())
+                .buyerFullName("Marie Ingabire")
+                .buyerNationalId("1199990098765432")
+                .buyerPhone("+250780000006")
+                .offerAmount(new BigDecimal("175000.00"))
+                .depositAmount(new BigDecimal("17500.00"))
+                .fundingSource(FundingSource.BANK_MORTGAGE)
+                .proposedClosingDate(LocalDate.now().plusMonths(2))
+                .offerExpirationDate(LocalDate.now().plusDays(11))
+                .status(ApplicationStatus.ACCEPTED)
+                .build());
+
+        applicationRepository.save(PropertyApplication.builder()
+                .propertyId(prop10.getId())
+                .buyerPublicId(ownerUser.getPublicId().toString())
+                .buyerFullName("Eric Nkurunziza")
+                .buyerNationalId("1199880012345678")
+                .buyerPhone("+250780000005")
+                .offerAmount(new BigDecimal("128000.00"))
+                .depositAmount(new BigDecimal("12800.00"))
+                .fundingSource(FundingSource.BANK_MORTGAGE)
+                .proposedClosingDate(LocalDate.now().plusMonths(2))
+                .offerExpirationDate(LocalDate.now().plusDays(10))
+                .status(ApplicationStatus.PENDING)
+                .build());
+
+        Transaction tx2 = transactionRepository.save(Transaction.builder()
+                .propertyId(prop5.getId())
+                .listingAgentPublicId(alice.getUserPublicId())
+                .sellingAgentPublicId(alice.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .buyerPublicId(clientUser.getPublicId().toString())
+                .companyId(companyId)
+                .saleAmount(new BigDecimal("155000.00"))
+                .commissionRate(new BigDecimal("0.05"))
+                .totalCommission(new BigDecimal("7750.00"))
+                .companyCommission(new BigDecimal("775.00"))
+                .listingAgentCommission(new BigDecimal("2325.00"))
+                .sellingAgentCommission(new BigDecimal("4650.00"))
+                .type(TransactionType.SALE)
+                .status(TransactionStatus.COMPLETED)
+                .createdAt(LocalDateTime.now().minusMonths(1))
+                .build());
+
+        Transaction tx3 = transactionRepository.save(Transaction.builder()
+                .propertyId(prop7.getId())
+                .listingAgentPublicId(bob.getUserPublicId())
+                .sellingAgentPublicId(bob.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .buyerPublicId(clientUser.getPublicId().toString())
+                .companyId(companyId)
+                .saleAmount(new BigDecimal("72000.00"))
+                .commissionRate(new BigDecimal("0.05"))
+                .totalCommission(new BigDecimal("3600.00"))
+                .companyCommission(new BigDecimal("360.00"))
+                .listingAgentCommission(new BigDecimal("1080.00"))
+                .sellingAgentCommission(new BigDecimal("2160.00"))
+                .type(TransactionType.SALE)
+                .status(TransactionStatus.COMPLETED)
+                .createdAt(LocalDateTime.now().minusMonths(2))
+                .build());
+
+        Transaction tx4 = transactionRepository.save(Transaction.builder()
+                .propertyId(prop9.getId())
+                .listingAgentPublicId(bob.getUserPublicId())
+                .sellingAgentPublicId(alice.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .buyerPublicId(clientUser.getPublicId().toString())
+                .companyId(companyId)
+                .saleAmount(new BigDecimal("178000.00"))
+                .commissionRate(new BigDecimal("0.05"))
+                .totalCommission(new BigDecimal("8900.00"))
+                .companyCommission(new BigDecimal("890.00"))
+                .listingAgentCommission(new BigDecimal("2670.00"))
+                .sellingAgentCommission(new BigDecimal("5340.00"))
+                .type(TransactionType.SALE)
+                .status(TransactionStatus.COMPLETED)
+                .createdAt(LocalDateTime.now().minusMonths(3))
+                .build());
+
+        Transaction tx5 = transactionRepository.save(Transaction.builder()
+                .propertyId(prop4.getId())
+                .listingAgentPublicId(bob.getUserPublicId())
+                .sellingAgentPublicId(bob.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .buyerPublicId(clientUser.getPublicId().toString())
+                .companyId(companyId)
+                .saleAmount(new BigDecimal("75000.00"))
+                .commissionRate(new BigDecimal("0.05"))
+                .totalCommission(new BigDecimal("3750.00"))
+                .companyCommission(new BigDecimal("375.00"))
+                .listingAgentCommission(new BigDecimal("1012.50"))
+                .sellingAgentCommission(new BigDecimal("2362.50"))
+                .type(TransactionType.SALE)
+                .status(TransactionStatus.COMPLETED)
+                .createdAt(LocalDateTime.now().minusMonths(4))
+                .build());
+
+        Transaction tx6 = transactionRepository.save(Transaction.builder()
+                .propertyId(prop3.getId())
+                .listingAgentPublicId(bob.getUserPublicId())
+                .sellingAgentPublicId(alice.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .buyerPublicId(ownerUser.getPublicId().toString())
+                .companyId(companyId)
+                .saleAmount(new BigDecimal("83000.00"))
+                .commissionRate(new BigDecimal("0.05"))
+                .totalCommission(new BigDecimal("4150.00"))
+                .companyCommission(new BigDecimal("415.00"))
+                .listingAgentCommission(new BigDecimal("1245.00"))
+                .sellingAgentCommission(new BigDecimal("2490.00"))
+                .type(TransactionType.SALE)
+                .status(TransactionStatus.COMPLETED)
+                .createdAt(LocalDateTime.now().minusMonths(5))
+                .build());
+
+        Transaction tx7 = transactionRepository.save(Transaction.builder()
+                .propertyId(prop2.getId())
+                .listingAgentPublicId(alice.getUserPublicId())
+                .sellingAgentPublicId(alice.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .buyerPublicId(clientUser.getPublicId().toString())
+                .companyId(companyId)
+                .saleAmount(new BigDecimal("350000.00"))
+                .commissionRate(new BigDecimal("0.05"))
+                .totalCommission(new BigDecimal("17500.00"))
+                .companyCommission(new BigDecimal("1750.00"))
+                .listingAgentCommission(new BigDecimal("5250.00"))
+                .sellingAgentCommission(new BigDecimal("10500.00"))
+                .type(TransactionType.SALE)
+                .status(TransactionStatus.PENDING)
+                .createdAt(LocalDateTime.now().minusMonths(1))
+                .build());
+
+        commissionRepository.saveAll(List.of(
+                Commission.builder().transactionId(tx2.getId())
+                        .recipientPublicId(alice.getUserPublicId())
+                        .recipientType(CommissionRecipientType.SELLING_AGENT)
+                        .amount(new BigDecimal("4650.00"))
+                        .status(com.homequest.transaction.model.CommissionStatus.PAID)
+                        .paidAt(LocalDateTime.now().minusMonths(1).plusDays(3))
+                        .build(),
+                Commission.builder().transactionId(tx3.getId())
+                        .recipientPublicId(bob.getUserPublicId())
+                        .recipientType(CommissionRecipientType.SELLING_AGENT)
+                        .amount(new BigDecimal("2160.00"))
+                        .status(com.homequest.transaction.model.CommissionStatus.PAID)
+                        .paidAt(LocalDateTime.now().minusMonths(2).plusDays(4))
+                        .build(),
+                Commission.builder().transactionId(tx4.getId())
+                        .recipientPublicId(alice.getUserPublicId())
+                        .recipientType(CommissionRecipientType.SELLING_AGENT)
+                        .amount(new BigDecimal("5340.00"))
+                        .status(com.homequest.transaction.model.CommissionStatus.PAID)
+                        .paidAt(LocalDateTime.now().minusMonths(3).plusDays(2))
+                        .build(),
+                Commission.builder().transactionId(tx5.getId())
+                        .recipientPublicId(bob.getUserPublicId())
+                        .recipientType(CommissionRecipientType.SELLING_AGENT)
+                        .amount(new BigDecimal("2362.50"))
+                        .status(com.homequest.transaction.model.CommissionStatus.PAID)
+                        .paidAt(LocalDateTime.now().minusMonths(4).plusDays(5))
+                        .build(),
+                Commission.builder().transactionId(tx6.getId())
+                        .recipientPublicId(alice.getUserPublicId())
+                        .recipientType(CommissionRecipientType.SELLING_AGENT)
+                        .amount(new BigDecimal("2490.00"))
+                        .status(com.homequest.transaction.model.CommissionStatus.PAID)
+                        .paidAt(LocalDateTime.now().minusMonths(5).plusDays(1))
+                        .build(),
+                Commission.builder().transactionId(tx7.getId())
+                        .recipientPublicId(alice.getUserPublicId())
+                        .recipientType(CommissionRecipientType.SELLING_AGENT)
+                        .amount(new BigDecimal("10500.00"))
+                        .status(com.homequest.transaction.model.CommissionStatus.PENDING)
+                        .build()));
+
         log.info("Transaction and commissions seeded.");
         log.info("✅ Database seeding complete.");
         log.info("Test accounts seeded — check application.properties or README for credentials.");
@@ -507,5 +857,192 @@ public class DataSeeder implements ApplicationRunner {
                         .type(type)
                         .parent(parent)
                         .build()));
+    }
+
+    private void seedChartDataBackfillIfNeeded() {
+        boolean alreadyPresent = propertyRepository.findAll().stream()
+                .anyMatch(p -> "Chart Seed Apartment".equals(p.getTitle()));
+        if (alreadyPresent) {
+            return;
+        }
+
+        Company company = companyRepository.findAll().stream().findFirst().orElse(null);
+        User agentOne = userRepository.findByEmail("alice@homequest.rw").orElse(null);
+        User agentTwo = userRepository.findByEmail("bob@homequest.rw").orElse(null);
+        User ownerUser = userRepository.findByEmail("owner@homequest.rw").orElse(null);
+        User clientUser = userRepository.findByEmail("client@homequest.rw").orElse(null);
+        if (company == null || agentOne == null || agentTwo == null || ownerUser == null || clientUser == null) {
+            return;
+        }
+
+        Agent alice = agentRepository.findByUserPublicId(agentOne.getPublicId().toString()).orElse(null);
+        Agent bob = agentRepository.findByUserPublicId(agentTwo.getPublicId().toString()).orElse(null);
+        Owner owner = ownerRepository.findByUserPublicId(ownerUser.getPublicId().toString()).orElse(null);
+        Client client = clientRepository.findByUserPublicId(clientUser.getPublicId().toString()).orElse(null);
+        if (alice == null || bob == null || owner == null || client == null) {
+            return;
+        }
+
+        Long companyId = company.getId();
+
+        Property chartApartment = propertyRepository.save(Property.builder()
+                .title("Chart Seed Apartment")
+                .description("Seed record for dashboard charts.")
+                .price(new BigDecimal("165000.00"))
+                .listingPrice(new BigDecimal("165000.00"))
+                .address("KG 11 Ave").city("Kigali").country("Rwanda")
+                .bedrooms(2).bathrooms(2).areaSqm(new BigDecimal("110.00"))
+                .type(PropertyType.APARTMENT).status(PropertyStatus.SOLD)
+                .locationCode("RW-KGL-GSB-KCY")
+                .listingAgentPublicId(alice.getUserPublicId())
+                .sellingAgentPublicId(alice.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .buyerPublicId(clientUser.getPublicId().toString())
+                .companyId(companyId)
+                .build());
+
+        Property chartHouse = propertyRepository.save(Property.builder()
+                .title("Chart Seed House")
+                .description("Seed record for dashboard charts.")
+                .price(new BigDecimal("91000.00"))
+                .listingPrice(new BigDecimal("91000.00"))
+                .address("HU 44 Rd").city("Huye").country("Rwanda")
+                .bedrooms(3).bathrooms(2).areaSqm(new BigDecimal("145.00"))
+                .type(PropertyType.HOUSE).status(PropertyStatus.SOLD)
+                .locationCode("RW-SOU-HUY-BTR")
+                .listingAgentPublicId(bob.getUserPublicId())
+                .sellingAgentPublicId(bob.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .buyerPublicId(clientUser.getPublicId().toString())
+                .companyId(companyId)
+                .build());
+
+        Property chartLand = propertyRepository.save(Property.builder()
+                .title("Chart Seed Land")
+                .description("Seed record for dashboard charts.")
+                .price(new BigDecimal("73000.00"))
+                .listingPrice(new BigDecimal("73000.00"))
+                .address("NY 19 Plot").city("Nyagatare").country("Rwanda")
+                .bedrooms(0).bathrooms(0).areaSqm(new BigDecimal("2800.00"))
+                .type(PropertyType.LAND).status(PropertyStatus.AVAILABLE)
+                .locationCode("RW-EAS-NYT-TBG")
+                .listingAgentPublicId(alice.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .companyId(companyId)
+                .build());
+
+        PropertyApplication app1 = applicationRepository.save(PropertyApplication.builder()
+                .propertyId(chartApartment.getId())
+                .buyerPublicId(clientUser.getPublicId().toString())
+                .buyerFullName(client.getFirstName() + " " + client.getLastName())
+                .buyerNationalId("1199990098765432")
+                .buyerPhone(client.getPhone())
+                .offerAmount(new BigDecimal("160000.00"))
+                .depositAmount(new BigDecimal("16000.00"))
+                .fundingSource(FundingSource.BANK_MORTGAGE)
+                .proposedClosingDate(LocalDate.now().plusMonths(1))
+                .offerExpirationDate(LocalDate.now().plusDays(10))
+                .status(ApplicationStatus.ACCEPTED)
+                .build());
+
+        PropertyApplication app2 = applicationRepository.save(PropertyApplication.builder()
+                .propertyId(chartHouse.getId())
+                .buyerPublicId(ownerUser.getPublicId().toString())
+                .buyerFullName(owner.getFirstName() + " " + owner.getLastName())
+                .buyerNationalId("1199880012345678")
+                .buyerPhone(owner.getPhone())
+                .offerAmount(new BigDecimal("90000.00"))
+                .depositAmount(new BigDecimal("9000.00"))
+                .fundingSource(FundingSource.CASH)
+                .proposedClosingDate(LocalDate.now().plusMonths(2))
+                .offerExpirationDate(LocalDate.now().plusDays(12))
+                .status(ApplicationStatus.PENDING)
+                .build());
+
+        PropertyApplication app3 = applicationRepository.save(PropertyApplication.builder()
+                .propertyId(chartLand.getId())
+                .buyerPublicId(clientUser.getPublicId().toString())
+                .buyerFullName(client.getFirstName() + " " + client.getLastName())
+                .buyerNationalId("1199990098765432")
+                .buyerPhone(client.getPhone())
+                .offerAmount(new BigDecimal("70000.00"))
+                .depositAmount(new BigDecimal("7000.00"))
+                .fundingSource(FundingSource.PAYMENT_PLAN)
+                .proposedClosingDate(LocalDate.now().plusMonths(3))
+                .offerExpirationDate(LocalDate.now().plusDays(15))
+                .status(ApplicationStatus.REJECTED)
+                .build());
+
+        Transaction tx1 = transactionRepository.save(Transaction.builder()
+                .propertyId(chartApartment.getId())
+                .listingAgentPublicId(alice.getUserPublicId())
+                .sellingAgentPublicId(alice.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .buyerPublicId(clientUser.getPublicId().toString())
+                .companyId(companyId)
+                .saleAmount(new BigDecimal("165000.00"))
+                .commissionRate(new BigDecimal("0.05"))
+                .totalCommission(new BigDecimal("8250.00"))
+                .companyCommission(new BigDecimal("825.00"))
+                .listingAgentCommission(new BigDecimal("2475.00"))
+                .sellingAgentCommission(new BigDecimal("4950.00"))
+                .type(TransactionType.SALE)
+                .status(TransactionStatus.COMPLETED)
+                .createdAt(LocalDateTime.now().minusMonths(1))
+                .build());
+
+        Transaction tx2 = transactionRepository.save(Transaction.builder()
+                .propertyId(chartHouse.getId())
+                .listingAgentPublicId(bob.getUserPublicId())
+                .sellingAgentPublicId(bob.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .buyerPublicId(clientUser.getPublicId().toString())
+                .companyId(companyId)
+                .saleAmount(new BigDecimal("91000.00"))
+                .commissionRate(new BigDecimal("0.05"))
+                .totalCommission(new BigDecimal("4550.00"))
+                .companyCommission(new BigDecimal("455.00"))
+                .listingAgentCommission(new BigDecimal("1365.00"))
+                .sellingAgentCommission(new BigDecimal("2730.00"))
+                .type(TransactionType.SALE)
+                .status(TransactionStatus.COMPLETED)
+                .createdAt(LocalDateTime.now().minusMonths(2))
+                .build());
+
+        transactionRepository.save(Transaction.builder()
+                .propertyId(chartLand.getId())
+                .listingAgentPublicId(alice.getUserPublicId())
+                .sellingAgentPublicId(bob.getUserPublicId())
+                .ownerPublicId(owner.getUserPublicId())
+                .buyerPublicId(ownerUser.getPublicId().toString())
+                .companyId(companyId)
+                .saleAmount(new BigDecimal("73000.00"))
+                .commissionRate(new BigDecimal("0.05"))
+                .totalCommission(new BigDecimal("3650.00"))
+                .companyCommission(new BigDecimal("365.00"))
+                .listingAgentCommission(new BigDecimal("1095.00"))
+                .sellingAgentCommission(new BigDecimal("2190.00"))
+                .type(TransactionType.SALE)
+                .status(TransactionStatus.PENDING)
+                .createdAt(LocalDateTime.now().minusMonths(3))
+                .build());
+
+        commissionRepository.saveAll(List.of(
+                Commission.builder().transactionId(tx1.getId())
+                        .recipientPublicId(alice.getUserPublicId())
+                        .recipientType(CommissionRecipientType.SELLING_AGENT)
+                        .amount(new BigDecimal("4950.00"))
+                        .status(com.homequest.transaction.model.CommissionStatus.PAID)
+                        .paidAt(LocalDateTime.now().minusMonths(1).plusDays(2))
+                        .build(),
+                Commission.builder().transactionId(tx2.getId())
+                        .recipientPublicId(bob.getUserPublicId())
+                        .recipientType(CommissionRecipientType.SELLING_AGENT)
+                        .amount(new BigDecimal("2730.00"))
+                        .status(com.homequest.transaction.model.CommissionStatus.PAID)
+                        .paidAt(LocalDateTime.now().minusMonths(2).plusDays(4))
+                        .build()));
+
+        log.info("Backfilled chart seed data for existing database.");
     }
 }

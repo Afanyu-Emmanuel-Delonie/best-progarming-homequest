@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react"
-import { Building2, DollarSign, ArrowLeftRight, TrendingUp, ArrowRight } from "lucide-react"
+import { Building2, DollarSign, ArrowLeftRight, TrendingUp, ArrowRight, Download } from "lucide-react"
 import { fmtCurrency } from "../../../utils/formatters"
 import KpiCard from "../../../components/shared/KpiCard"
 import { PROPERTY_STATUS, TRANSACTION_STATUS } from "../../../constants/enums"
 import { propertiesApi } from "../../../api/properties.api"
 import { transactionsApi } from "../../../api/transactions.api"
+import { reportsApi } from "../../../api/reports.api"
+import { toast } from "react-toastify"
 
 const T  = { margin: 0, fontWeight: 700, fontSize: "0.9375rem", color: "var(--color-text)" }
 const S  = { margin: "2px 0 0", fontSize: "0.75rem", color: "var(--color-text-muted)" }
@@ -14,6 +16,7 @@ export default function OwnerDashboard() {
   const [activeKpi, setActiveKpi] = useState(0)
   const [properties, setProperties] = useState([])
   const [transactions, setTransactions] = useState([])
+  const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
     propertiesApi.getMyOwned().then(res => setProperties(res.content ?? (Array.isArray(res) ? res : []))).catch(() => {})
@@ -32,8 +35,27 @@ export default function OwnerDashboard() {
     { label: "Revenue Earned", value: fmtCurrency(totalRevenue),  sub: "from completed sales",        up: true, icon: <TrendingUp size={18} />,     accent: "#6D28D9" },
   ]
 
+  const exportReport = async () => {
+    setExporting(true)
+    try {
+      await reportsApi.downloadOwner()
+      toast.success("Owner report downloaded")
+    } finally {
+      setExporting(false)
+    }
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.75rem", flexWrap: "wrap" }}>
+        <div>
+          <p style={{ margin: 0, fontWeight: 700, fontSize: "1.1rem", color: "var(--color-text)" }}>Owner Account</p>
+          <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "var(--color-text-muted)" }}>Property portfolio and transaction performance</p>
+        </div>
+        <button onClick={exportReport} disabled={exporting} style={{ display: "flex", alignItems: "center", gap: "0.45rem", padding: "0.6rem 1.05rem", borderRadius: "9px", border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", color: "var(--color-text)", fontWeight: 600, fontSize: "0.8375rem", cursor: exporting ? "not-allowed" : "pointer", fontFamily: "inherit", opacity: exporting ? 0.7 : 1 }}>
+          <Download size={15} /> {exporting ? "Exporting…" : "Export Report"}
+        </button>
+      </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
         {kpis.map((k, i) => (

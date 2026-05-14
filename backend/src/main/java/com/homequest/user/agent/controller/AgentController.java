@@ -41,7 +41,7 @@ public class AgentController {
     @GetMapping("/me")
     @PreAuthorize("hasAuthority('ROLE_AGENT')")
     public ResponseEntity<AgentResponse> getMyProfile(Authentication auth) {
-        return ResponseEntity.ok(agentService.getByUserPublicId(getUserPublicId(auth)));
+        return safeProfileResponse(() -> agentService.getByUserPublicId(getUserPublicId(auth)));
     }
 
     @PutMapping("/me")
@@ -53,7 +53,7 @@ public class AgentController {
     @GetMapping("/by-public-id/{publicId}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<AgentResponse> getByPublicId(@PathVariable String publicId) {
-        return ResponseEntity.ok(agentService.getByUserPublicId(publicId));
+        return safeProfileResponse(() -> agentService.getByUserPublicId(publicId));
     }
 
     /** Public: top agents for marketing (no auth). */
@@ -88,5 +88,18 @@ public class AgentController {
 
     private String getUserPublicId(Authentication auth) {
         return (String) auth.getPrincipal();
+    }
+
+    private ResponseEntity<AgentResponse> safeProfileResponse(ProfileLookup lookup) {
+        try {
+            return ResponseEntity.ok(lookup.get());
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.ok().build();
+        }
+    }
+
+    @FunctionalInterface
+    private interface ProfileLookup {
+        AgentResponse get();
     }
 }

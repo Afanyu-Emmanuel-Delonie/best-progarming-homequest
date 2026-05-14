@@ -16,6 +16,7 @@ import AdminApplications from "./pages/admin/AdminApplications"
 import AdminTransactions from "./pages/admin/AdminTransactions"
 import AdminDocuments    from "./pages/admin/AdminDocuments"
 import AdminSettings     from "./pages/admin/AdminSettings"
+import ReportsPage       from "./pages/reports/ReportsPage"
 
 import AgentLayout           from "./layouts/AgentLayout"
 import AgentDashboard        from "./pages/agent/dashboard/AgentDashboard"
@@ -85,6 +86,7 @@ function AppShell() {
               <Route path="/admin/transactions" element={<AdminTransactions />} />
               <Route path="/admin/documents"    element={<AdminDocuments />} />
               <Route path="/admin/settings"     element={<AdminSettings />} />
+              <Route path="/admin/reports"      element={<ReportsPage />} />
             </Route>
           </Route>
         </Route>
@@ -102,6 +104,7 @@ function AppShell() {
               <Route path="/agent/documents"    element={<AgentDocumentsPage />} />
               <Route path="/agent/commissions"  element={<CommissionsPage />} />
               <Route path="/agent/profile"      element={<AgentProfilePage />} />
+              <Route path="/agent/reports"      element={<ReportsPage />} />
             </Route>
           </Route>
         </Route>
@@ -114,6 +117,7 @@ function AppShell() {
               <Route path="/client/applications" element={<ClientApplicationsPage />} />
               <Route path="/client/documents"    element={<ClientDocumentsPage />} />
               <Route path="/client/saved"        element={<ClientSavedPage />} />
+              <Route path="/client/reports"      element={<ReportsPage />} />
             </Route>
           </Route>
         </Route>
@@ -126,6 +130,7 @@ function AppShell() {
               <Route path="/owner/properties"   element={<OwnerPropertiesPage />} />
               <Route path="/owner/transactions" element={<OwnerTransactionsPage />} />
               <Route path="/owner/documents"    element={<OwnerDocumentsPage />} />
+              <Route path="/owner/reports"      element={<ReportsPage />} />
             </Route>
           </Route>
         </Route>

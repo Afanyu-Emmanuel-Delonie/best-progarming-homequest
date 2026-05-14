@@ -3,10 +3,11 @@ import client from "./client";
 export const usersApi = {
   getAll: (params) => client.get("/users", { params }).then((r) => r.data),
   getById: (id) => client.get(`/users/${id}`).then((r) => r.data),
+  getByPublicId: (pid) => client.get(`/users/by-public-id/${pid}`).then((r) => r.data),
   remove: (id) => client.delete(`/users/${id}`).then((r) => r.data),
   suspend: (id) => client.patch(`/users/${id}/suspend`).then((r) => r.data),
   activate: (id) => client.patch(`/users/${id}/activate`).then((r) => r.data),
-  // Profile lookups by publicId (silent = no toast on 404)
+  // Profile lookups by publicId (silent = no toast on missing profile)
   getAgentByPublicId: (pid) =>
     client
       .get(`/agents/by-public-id/${pid}`, {
@@ -38,13 +39,27 @@ export const clientsApi = {
       .then((r) => r.data),
 };
 
-// Resolve a publicId to "First Last" — tries agent, then owner, then client
+// Resolve a publicId to a display name using the base user record first.
 export async function resolvePublicId(pid) {
   if (!pid) return "—";
-  const profile =
-    (await usersApi.getAgentByPublicId(pid)) ??
-    (await usersApi.getOwnerByPublicId(pid)) ??
-    (await usersApi.getClientByPublicId(pid));
-  if (!profile) return pid.slice(0, 8) + "…";
-  return `${profile.firstName} ${profile.lastName}`;
+  try {
+    const user = await usersApi.getByPublicId(pid);
+    const role = user?.role;
+    const profile =
+      role === "ROLE_AGENT"
+        ? await usersApi.getAgentByPublicId(pid)
+        : role === "ROLE_OWNER"
+          ? await usersApi.getOwnerByPublicId(pid)
+          : role === "ROLE_CUSTOMER"
+            ? await usersApi.getClientByPublicId(pid)
+            : null;
+
+    if (profile?.firstName || profile?.lastName) {
+      return `${profile.firstName ?? ""} ${profile.lastName ?? ""}`.trim();
+    }
+    if (user?.username) return user.username;
+  } catch {
+    // fall through to short ID below
+  }
+  return `${pid.slice(0, 8)}…`;
 }

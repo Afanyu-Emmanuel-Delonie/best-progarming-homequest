@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { User, Phone, Mail, Building2, FileText, Save, Loader2 } from "lucide-react"
+import { User, Phone, Mail, Building2, FileText, Save, Loader2, Download } from "lucide-react"
 import { useSelector } from "react-redux"
 import { StatCard } from "../../../components/shared/AdminUI"
 import { fmtCurrency, fmtDate } from "../../../utils/formatters"
@@ -7,6 +7,7 @@ import { avatarColor } from "../../../constants/enums"
 import { usersApi } from "../../../api/users.api"
 import { propertiesApi } from "../../../api/properties.api"
 import { transactionsApi } from "../../../api/transactions.api"
+import { reportsApi } from "../../../api/reports.api"
 import client from "../../../api/client"
 import { toast } from "react-toastify"
 
@@ -16,6 +17,7 @@ export default function AgentProfilePage() {
   const [profile,  setProfile]  = useState(null)
   const [loading,  setLoading]  = useState(true)
   const [saving,   setSaving]   = useState(false)
+  const [exporting, setExporting] = useState(false)
   const [form,     setForm]     = useState({ firstName: "", lastName: "", phone: "", licenseNumber: "" })
   const [stats,    setStats]    = useState({ listings: 0, deals: 0, earned: 0 })
 
@@ -55,6 +57,16 @@ export default function AgentProfilePage() {
     }
   }
 
+  const exportReport = async () => {
+    setExporting(true)
+    try {
+      await reportsApi.downloadAgent(authUser?.publicId)
+      toast.success("Agent report downloaded")
+    } finally {
+      setExporting(false)
+    }
+  }
+
   const initials = form.firstName && form.lastName
     ? `${form.firstName[0]}${form.lastName[0]}`.toUpperCase()
     : (authUser?.username?.[0] ?? "?").toUpperCase()
@@ -69,6 +81,15 @@ export default function AgentProfilePage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.75rem", flexWrap: "wrap" }}>
+        <div>
+          <p style={{ margin: 0, fontWeight: 700, fontSize: "1.1rem", color: "var(--color-text)" }}>Agent Profile</p>
+          <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "var(--color-text-muted)" }}>Update your profile or export the full account report</p>
+        </div>
+        <button onClick={exportReport} disabled={exporting} style={{ display: "flex", alignItems: "center", gap: "0.45rem", padding: "0.6rem 1.05rem", borderRadius: "9px", border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", color: "var(--color-text)", fontWeight: 600, fontSize: "0.8375rem", cursor: exporting ? "not-allowed" : "pointer", fontFamily: "inherit", opacity: exporting ? 0.7 : 1 }}>
+          <Download size={15} /> {exporting ? "Exporting…" : "Export Report"}
+        </button>
+      </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem" }}>
         <StatCard label="Listings"     value={stats.listings}          color="#1D4ED8" />
@@ -79,7 +100,7 @@ export default function AgentProfilePage() {
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,320px)", gap: "1.5rem", alignItems: "start" }} className="dash-grid">
 
-        <div style={{ backgroundColor: "var(--color-surface)", borderRadius: "14px", border: "1px solid var(--color-border)", overflow: "hidden" }}>
+        <form onSubmit={(e) => { e.preventDefault(); handleSave() }} style={{ backgroundColor: "var(--color-surface)", borderRadius: "14px", border: "1px solid var(--color-border)", overflow: "hidden" }}>
           <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid var(--color-border)" }}>
             <p style={{ margin: 0, fontWeight: 700, fontSize: "0.9375rem", color: "var(--color-text)" }}>Profile Information</p>
             <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "var(--color-text-muted)" }}>Update your personal details</p>
@@ -97,15 +118,16 @@ export default function AgentProfilePage() {
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <button
-                onClick={handleSave} disabled={saving}
+                type="submit"
+                disabled={saving}
                 style={{ display: "flex", alignItems: "center", gap: "0.45rem", padding: "0.6rem 1.25rem", borderRadius: "9px", border: "none", backgroundColor: "var(--color-primary)", color: "#fff", fontWeight: 600, fontSize: "0.875rem", cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.75 : 1, fontFamily: "inherit" }}
               >
                 {saving ? <Loader2 size={15} style={{ animation: "spin 1s linear infinite" }} /> : <Save size={15} />}
-                {saving ? "Saving…" : "Save Changes"}
+                {saving ? "Saving..." : "Save Changes"}
               </button>
             </div>
           </div>
-        </div>
+        </form>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div style={{ backgroundColor: "var(--color-surface)", borderRadius: "14px", border: "1px solid var(--color-border)", padding: "1.5rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", textAlign: "center" }}>

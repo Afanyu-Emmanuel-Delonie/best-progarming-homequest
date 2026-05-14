@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo } from "react"
-import { Home, DollarSign, ClipboardList, TrendingUp, ArrowRight, Loader2 } from "lucide-react"
+import { Home, DollarSign, ClipboardList, TrendingUp, ArrowRight, Loader2, Download } from "lucide-react"
 import { fmtCurrency } from "../../../utils/formatters"
 import KpiCard from "../../../components/shared/KpiCard"
 import { APPLICATION_STATUS, PROPERTY_STATUS } from "../../../constants/enums"
 import { propertiesApi } from "../../../api/properties.api"
 import { applicationsApi } from "../../../api/applications.api"
 import { transactionsApi } from "../../../api/transactions.api"
+import { reportsApi } from "../../../api/reports.api"
+import { toast } from "react-toastify"
 
 const T = { margin: 0, fontWeight: 700, fontSize: "0.9375rem", color: "var(--color-text)" }
 const S = { margin: "2px 0 0", fontSize: "0.75rem", color: "var(--color-text-muted)" }
@@ -17,6 +19,7 @@ export default function AgentDashboard() {
   const [commissions,  setCommissions]  = useState([])
   const [loading,      setLoading]      = useState(true)
   const [activeKpi,    setActiveKpi]    = useState(0)
+  const [exporting,    setExporting]    = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -45,6 +48,16 @@ export default function AgentDashboard() {
   const recentApps  = useMemo(() => [...applications].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5), [applications])
   const topListings = useMemo(() => [...listings].sort((a, b) => Number(b.price) - Number(a.price)).slice(0, 4), [listings])
 
+  const exportReport = async () => {
+    setExporting(true)
+    try {
+      await reportsApi.downloadAgent()
+      toast.success("Agent report downloaded")
+    } finally {
+      setExporting(false)
+    }
+  }
+
   if (loading) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "60vh", gap: "0.75rem", color: "var(--color-text-muted)" }}>
       <Loader2 size={20} style={{ animation: "spin 1s linear infinite" }} /> Loading dashboard…
@@ -54,6 +67,15 @@ export default function AgentDashboard() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.75rem", flexWrap: "wrap" }}>
+        <div>
+          <p style={{ margin: 0, fontWeight: 700, fontSize: "1.1rem", color: "var(--color-text)" }}>Agent Account</p>
+          <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "var(--color-text-muted)" }}>Performance, listings, applications, and commissions</p>
+        </div>
+        <button onClick={exportReport} disabled={exporting} style={{ display: "flex", alignItems: "center", gap: "0.45rem", padding: "0.6rem 1.05rem", borderRadius: "9px", border: "1px solid var(--color-border)", backgroundColor: "var(--color-surface)", color: "var(--color-text)", fontWeight: 600, fontSize: "0.8375rem", cursor: exporting ? "not-allowed" : "pointer", fontFamily: "inherit", opacity: exporting ? 0.7 : 1 }}>
+          <Download size={15} /> {exporting ? "Exporting…" : "Export Report"}
+        </button>
+      </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
         {KPIS.map((k, i) => (
